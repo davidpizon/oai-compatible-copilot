@@ -8,8 +8,9 @@ import {
 	Progress,
 	CancellationToken,
 } from "vscode";
-import { HFModelItem } from "./types";
+import { HFModelItem, CustomDataPartMimeTypes, TokenUsage } from "./types";
 import { tryParseJSONObject } from "./utils";
+import { logger } from "./logger";
 import { VersionManager } from "./versionManager";
 
 export abstract class CommonApi<TMessage, TRequestBody> {
@@ -52,6 +53,9 @@ export abstract class CommonApi<TMessage, TRequestBody> {
 
 	/** Set the model ID for logging purposes. */
 	protected _modelId = "";
+
+	/** Accumulated token usage from the API response. */
+	protected _usage: TokenUsage | null = null;
 
 	constructor(modelId: string) {
 		this._modelId = modelId;
@@ -386,5 +390,22 @@ export abstract class CommonApi<TMessage, TRequestBody> {
 		}
 
 		return { emittedAny };
+	}
+
+	/**
+	 * Report accumulated token usage as a LanguageModelDataPart so VS Code
+	 * can display usage stats in the Context Window widget.
+	 */
+	protected reportUsage(progress: Progress<LanguageModelResponsePart2>): void {
+		if (!this._usage) {
+			return;
+		}
+		logger.info("usage.report", { modelId: this._modelId, usage: this._usage });
+		try {
+			const bytes = new TextEncoder().encode(JSON.stringify(this._usage));
+			progress.report(new vscode.LanguageModelDataPart(bytes, CustomDataPartMimeTypes.Usage));
+		} catch (e) {
+			logger.error("usage.report.error", { modelId: this._modelId, error: e instanceof Error ? e.message : String(e) });
+		}
 	}
 }

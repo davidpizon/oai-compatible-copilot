@@ -7,7 +7,7 @@ import {
 	Progress,
 } from "vscode";
 
-import type { HFModelItem, ReasoningConfig } from "../types";
+import type { HFModelItem, ReasoningConfig, TokenUsage } from "../types";
 
 import type {
 	OpenAIChatMessage,
@@ -311,6 +311,11 @@ export class OpenaiApi extends CommonApi<OpenAIChatMessage, Record<string, unkno
 
 					try {
 						const parsed = JSON.parse(data);
+						// Capture usage from the final chunk (stream_options.include_usage)
+						if (parsed.usage && typeof parsed.usage === "object") {
+							this._usage = parsed.usage as TokenUsage;
+							logger.debug("usage.capture", { modelId: this._modelId, usage: this._usage });
+						}
 						await this.processDelta(parsed, progress);
 					} catch (e) {
 						console.error("[OpenAI Provider] Failed to parse SSE chunk:", e, "data:", data);
@@ -331,6 +336,8 @@ export class OpenaiApi extends CommonApi<OpenAIChatMessage, Record<string, unkno
 			reader.releaseLock();
 			// If there's an active thinking sequence, end it first
 			this.reportEndThinking(progress);
+			// Report accumulated usage for the Context Window widget
+			this.reportUsage(progress);
 		}
 	}
 

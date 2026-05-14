@@ -142,3 +142,32 @@ export interface RetryConfig {
 
 /** Supports API mode. */
 export type HFApiMode = "openai" | "openai-responses" | "ollama" | "anthropic" | "gemini";
+
+/**
+ * Custom data part MIME types for vscode.LanguageModelDataPart
+ */
+export namespace CustomDataPartMimeTypes {
+	export const CacheControl = "cache_control";
+	export const StatefulMarker = "stateful_marker";
+	export const ThinkingData = "thinking";
+	export const ContextManagement = "context_management";
+	export const PhaseData = "phase_data";
+	export const Usage = "usage";
+}
+
+/**
+ * Standard OpenAI token usage details.
+ */
+export interface TokenUsageDetails {
+	cached_tokens: number;
+}
+
+/**
+ * Standard OpenAI token usage structure.
+ */
+export interface TokenUsage {
+	prompt_tokens: number;
+	completion_tokens: number;
+	total_tokens: number;
+	prompt_tokens_details?: TokenUsageDetails;
+}

@@ -77,8 +77,15 @@ export interface GeminiGenerateContentResponse {
 		finishReason?: string;
 		finish_reason?: string;
 	}>;
-	usageMetadata?: unknown;
+	usageMetadata?: GeminiUsageMetadata;
 	[key: string]: unknown;
+}
+
+export interface GeminiUsageMetadata {
+	promptTokenCount?: number;
+	cachedContentTokenCount?: number;
+	candidatesTokenCount?: number;
+	totalTokenCount?: number;
 }
 
 export interface GeminiModelListResponse {

@@ -822,6 +822,20 @@ export class GeminiApi extends CommonApi<GeminiChatMessage, GeminiGenerateConten
 						continue;
 					}
 
+					// Capture usage metadata from Gemini response
+					if (payload.usageMetadata) {
+						const um = payload.usageMetadata;
+						this._usage = {
+							prompt_tokens: um.promptTokenCount ?? 0,
+							completion_tokens: um.candidatesTokenCount ?? 0,
+							total_tokens: um.totalTokenCount ?? 0,
+							prompt_tokens_details: um.cachedContentTokenCount
+								? { cached_tokens: um.cachedContentTokenCount }
+								: undefined,
+						};
+						logger.debug("usage.capture", { modelId: this._modelId, usage: this._usage });
+					}
+
 					const candidates = Array.isArray(payload.candidates) ? payload.candidates : [];
 					const cand = candidates.length > 0 ? candidates[0] : null;
 					const parts = Array.isArray(cand?.content?.parts) ? cand?.content?.parts : [];
@@ -1008,6 +1022,8 @@ export class GeminiApi extends CommonApi<GeminiChatMessage, GeminiGenerateConten
 		} finally {
 			reader.releaseLock();
 			this.reportEndThinking(progress);
+			// Report accumulated usage for the Context Window widget
+			this.reportUsage(progress);
 		}
 	}
 

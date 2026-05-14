@@ -348,6 +348,8 @@ export class OpenaiResponsesApi extends CommonApi<ResponsesInputItem, Record<str
 		} finally {
 			reader.releaseLock();
 			this.reportEndThinking(progress);
+			// Report accumulated usage for the Context Window widget
+			this.reportUsage(progress);
 		}
 	}
 
@@ -599,6 +601,20 @@ export class OpenaiResponsesApi extends CommonApi<ResponsesInputItem, Record<str
 				// End of message - ensure thinking is ended and flush all tool calls
 				await this.flushToolCallBuffers(progress, false);
 				this.reportEndThinking(progress);
+				// Capture usage from the completed event
+				const usage = event.usage ?? (event.response as Record<string, unknown>)?.usage;
+				if (usage && typeof usage === "object") {
+					const u = usage as Record<string, unknown>;
+					this._usage = {
+						prompt_tokens: Number(u.input_tokens ?? 0),
+						completion_tokens: Number(u.output_tokens ?? 0),
+						total_tokens: Number(u.total_tokens ?? 0),
+						prompt_tokens_details: u.input_tokens_details
+							? { cached_tokens: Number((u.input_tokens_details as Record<string, unknown>).cached_tokens ?? 0) }
+							: undefined,
+					};
+					logger.debug("usage.capture", { modelId: this._modelId, usage: this._usage });
+				}
 				return;
 			}
 		}

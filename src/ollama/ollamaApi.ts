@@ -203,6 +203,15 @@ export class OllamaApi extends CommonApi<OllamaMessage, OllamaRequestBody> {
 						if (chunk.done) {
 							// End any active thinking sequence
 							this.reportEndThinking(progress);
+							// Capture usage from the final chunk
+							const promptTokens = chunk.prompt_eval_count ?? 0;
+							const completionTokens = chunk.eval_count ?? 0;
+							this._usage = {
+								prompt_tokens: promptTokens,
+								completion_tokens: completionTokens,
+								total_tokens: promptTokens + completionTokens,
+							};
+							logger.debug("usage.capture", { modelId: this._modelId, usage: this._usage });
 						}
 					} catch (e) {
 						console.error("[Ollama Provider] Failed to parse streaming chunk:", e, "data:", line);
@@ -223,6 +232,8 @@ export class OllamaApi extends CommonApi<OllamaMessage, OllamaRequestBody> {
 			reader.releaseLock();
 			// End any active thinking sequence
 			this.reportEndThinking(progress);
+			// Report accumulated usage for the Context Window widget
+			this.reportUsage(progress);
 		}
 	}
 

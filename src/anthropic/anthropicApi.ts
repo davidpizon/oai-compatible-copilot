@@ -288,6 +288,8 @@ export class AnthropicApi extends CommonApi<AnthropicMessage, AnthropicRequestBo
 			reader.releaseLock();
 			// If there's an active thinking sequence, end it first
 			this.reportEndThinking(progress);
+			// Report accumulated usage for the Context Window widget
+			this.reportUsage(progress);
 		}
 	}
 
@@ -320,9 +322,24 @@ export class AnthropicApi extends CommonApi<AnthropicMessage, AnthropicRequestBo
 			return;
 		}
 
-		if (chunk.type === "message_delta" && chunk.delta) {
-			// Extract stop_reason and usage information
-			// We're not processing usage per user request, but could log if needed
+		if (chunk.type === "message_delta") {
+			// Capture usage from message_delta
+			if (chunk.usage) {
+				// Anthropic: prompt_tokens = input_tokens + cache_creation_input_tokens + cache_read_input_tokens
+				const inputTokens = chunk.usage.input_tokens ?? 0;
+				const cacheCreateTokens = chunk.usage.cache_creation_input_tokens ?? 0;
+				const cacheReadTokens = chunk.usage.cache_read_input_tokens ?? 0;
+				const promptTokens = inputTokens + cacheCreateTokens + cacheReadTokens;
+				this._usage = {
+					prompt_tokens: promptTokens,
+					completion_tokens: chunk.usage.output_tokens ?? 0,
+					total_tokens: promptTokens + (chunk.usage.output_tokens ?? 0),
+					prompt_tokens_details: {
+						cached_tokens: cacheReadTokens,
+					},
+				};
+				logger.debug("usage.capture", { modelId: this._modelId, usage: this._usage });
+			}
 			return;
 		}
 
