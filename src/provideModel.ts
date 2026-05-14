@@ -51,6 +51,7 @@ export async function prepareLanguageModelChatInformation(
 					version: "1.0.0",
 					maxInputTokens: maxInput,
 					maxOutputTokens: maxOutput,
+					isUserSelectable: true,
 					capabilities: {
 						toolCalling: true,
 						imageInput: m?.vision ?? false,
@@ -98,6 +99,7 @@ export async function prepareLanguageModelChatInformation(
 					version: "1.0.0",
 					maxInputTokens: maxInput,
 					maxOutputTokens: maxOutput,
+					isUserSelectable: true,
 					capabilities: {
 						toolCalling: true,
 						imageInput: vision,
@@ -119,6 +121,7 @@ export async function prepareLanguageModelChatInformation(
 					version: "1.0.0",
 					maxInputTokens: maxInput,
 					maxOutputTokens: maxOutput,
+					isUserSelectable: true,
 					capabilities: {
 						toolCalling: true,
 						imageInput: true,
