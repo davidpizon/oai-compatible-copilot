@@ -1,5 +1,16 @@
 # Change Log
 
+## 0.4.0 (2026-05-14)
+
+- Feat: Enhance tools parameter handling — merge tools arrays instead of overwriting across all API modes (Anthropic, Gemini, Ollama, OpenAI, OpenAI Responses).
+- Fix: Add "enumDescriptions" to unsupported Gemini schema keys to prevent schema validation errors.
+- Fix: Restore compatibility with VS Code 1.120.0.
+- Docs: Enhance README layout and add Chinese translation.
+
+Thanks for your contributing:
+  - @adensW [PR #220](https://github.com/JohnnyZ93/oai-compatible-copilot/pull/220).
+  - @chukangkang [PR #241](https://github.com/JohnnyZ93/oai-compatible-copilot/pull/241).
+
 ## 0.3.6 (2026-04-24)
 
 - Feat: Add `xhigh` and `max` reasoning effort options for DeepSeek-V4.
