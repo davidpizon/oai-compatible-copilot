@@ -243,7 +243,7 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 				await ollamaApi.processStreamingResponse(response.body, trackingProgress, token);
 			} else if (apiMode === "anthropic") {
 				// Anthropic API mode
-				const anthropicApi = new AnthropicApi(model.id);
+				const anthropicApi = new AnthropicApi(model.id, um?.cache_control !== false);
 				const anthropicMessages = anthropicApi.convertMessages(messages, modelConfig);
 
 				// requestBody
