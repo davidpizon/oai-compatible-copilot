@@ -13,6 +13,8 @@ import type {
 	AnthropicMessage,
 	AnthropicRequestBody,
 	AnthropicContentBlock,
+	AnthropicCacheControl,
+	AnthropicTextBlock,
 	AnthropicToolUseBlock,
 	AnthropicToolResultBlock,
 	AnthropicStreamChunk,
@@ -24,8 +26,42 @@ import { CommonApi } from "../commonApi";
 import { logger } from "../logger";
 
 export class AnthropicApi extends CommonApi<AnthropicMessage, AnthropicRequestBody> {
-	constructor(modelId: string) {
+	/**
+	 * Whether Anthropic prompt-caching breakpoints should be emitted on system / tools / messages.
+	 * When false, behave like prior versions (no `cache_control` anywhere in the request).
+	 */
+	private readonly _cacheControlEnabled: boolean;
+
+	constructor(modelId: string, cacheControlEnabled = true) {
 		super(modelId);
+		this._cacheControlEnabled = cacheControlEnabled;
+	}
+
+	/**
+	 * Decode a `LanguageModelDataPart` whose `mimeType` is `"cache_control"` into a real
+	 * Anthropic `cache_control` value. The host (Copilot) encodes the breakpoint payload as a
+	 * UTF-8 JSON string (e.g. `{"type":"ephemeral"}`). Falls back to `{type:"ephemeral"}` if
+	 * the payload is empty or malformed.
+	 */
+	private decodeCacheControlPart(part: vscode.LanguageModelDataPart): AnthropicCacheControl {
+		const fallback: AnthropicCacheControl = { type: "ephemeral" };
+		try {
+			const text = new TextDecoder().decode(part.data);
+			if (!text) {
+				return fallback;
+			}
+			const parsed = JSON.parse(text) as { type?: string; ttl?: string };
+			if (parsed && typeof parsed === "object" && parsed.type === "ephemeral") {
+				const cc: AnthropicCacheControl = { type: "ephemeral" };
+				if (parsed.ttl === "1h" || parsed.ttl === "5m") {
+					cc.ttl = parsed.ttl;
+				}
+				return cc;
+			}
+		} catch {
+			/* fall through */
+		}
+		return fallback;
 	}
 
 	/**
@@ -47,12 +83,28 @@ export class AnthropicApi extends CommonApi<AnthropicMessage, AnthropicRequestBo
 			const toolCalls: AnthropicToolUseBlock[] = [];
 			const toolResults: AnthropicToolResultBlock[] = [];
 			const thinkingParts: string[] = [];
+			// Cache breakpoints emitted by the host (Copilot) via LanguageModelDataPart(mimeType="cache_control").
+			// We mark the position in the constructed content-block list where each breakpoint should land.
+			// Breakpoints appearing before any other content fall back to the first block; after-all
+			// breakpoints fall back to the last block. Multiple breakpoints in the same message are honored,
+			// each attached to the latest block at the time the marker was seen.
+			const pendingCacheControls: { afterPartIndex: number; cc: AnthropicCacheControl }[] = [];
+			let collectedParts = 0;
 
 			for (const part of m.content ?? []) {
 				if (part instanceof vscode.LanguageModelTextPart) {
 					textParts.push(part.value);
+					collectedParts++;
+				} else if (part instanceof vscode.LanguageModelDataPart && part.mimeType === "cache_control") {
+					if (this._cacheControlEnabled) {
+						pendingCacheControls.push({
+							afterPartIndex: collectedParts,
+							cc: this.decodeCacheControlPart(part),
+						});
+					}
 				} else if (part instanceof vscode.LanguageModelDataPart && isImageMimeType(part.mimeType)) {
 					imageParts.push(part);
+					collectedParts++;
 				} else if (part instanceof vscode.LanguageModelToolCallPart) {
 					const id = part.callId || `toolu_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 					toolCalls.push({
@@ -61,6 +113,7 @@ export class AnthropicApi extends CommonApi<AnthropicMessage, AnthropicRequestBo
 						name: part.name,
 						input: (part.input as Record<string, unknown>) ?? {},
 					});
+					collectedParts++;
 				} else if (isToolResultPart(part)) {
 					const callId = (part as { callId?: string }).callId ?? "";
 					const content = collectToolResultText(part as { content?: ReadonlyArray<unknown> });
@@ -69,9 +122,11 @@ export class AnthropicApi extends CommonApi<AnthropicMessage, AnthropicRequestBo
 						tool_use_id: callId,
 						content,
 					});
+					collectedParts++;
 				} else if (part instanceof vscode.LanguageModelThinkingPart) {
 					const content = Array.isArray(part.value) ? part.value.join("") : part.value;
 					thinkingParts.push(content);
+					collectedParts++;
 				}
 			}
 
@@ -138,6 +193,18 @@ export class AnthropicApi extends CommonApi<AnthropicMessage, AnthropicRequestBo
 				});
 			}
 
+			// Apply pending cache_control markers to the appropriate block. The block order we built
+			// above does not always map 1:1 to the original part order (text is joined, tool results
+			// migrate, etc.), so we approximate: a marker that arrived after K source parts is attached
+			// to the block at index min(K-1, blocks.length-1). Markers seen before any part go on block 0.
+			for (const { afterPartIndex, cc } of pendingCacheControls) {
+				if (contentBlocks.length === 0) {
+					continue;
+				}
+				const target = Math.min(Math.max(afterPartIndex - 1, 0), contentBlocks.length - 1);
+				contentBlocks[target].cache_control = cc;
+			}
+
 			// Only add message if we have content blocks
 			if (contentBlocks.length > 0) {
 				out.push({
@@ -160,9 +227,21 @@ export class AnthropicApi extends CommonApi<AnthropicMessage, AnthropicRequestBo
 			rb.max_tokens = um.max_tokens;
 		}
 
-		// Add system content if we extracted it
+		// Add system content if we extracted it. When caching is enabled, emit the system prompt
+		// as a structured `text` block array carrying a `cache_control` breakpoint — without this,
+		// Anthropic will never cache the (often very long) Copilot system prompt and every turn pays
+		// full input cost. The string form remains the fallback when caching is disabled.
 		if (this._systemContent) {
-			rb.system = this._systemContent;
+			if (this._cacheControlEnabled) {
+				const systemBlock: AnthropicTextBlock = {
+					type: "text",
+					text: this._systemContent,
+					cache_control: { type: "ephemeral" },
+				};
+				rb.system = [systemBlock];
+			} else {
+				rb.system = this._systemContent;
+			}
 		}
 
 		// Add temperature
@@ -189,6 +268,13 @@ export class AnthropicApi extends CommonApi<AnthropicMessage, AnthropicRequestBo
 				description: tool.function.description,
 				input_schema: tool.function.parameters,
 			}));
+			// Mark the last tool with a cache_control breakpoint so the tool-definitions prefix is cached.
+			// Tool definitions are large and stable across a session — this is one of the highest-value
+			// breakpoints to set, and Anthropic counts everything up to and including this tool toward
+			// the cached prefix on subsequent requests.
+			if (this._cacheControlEnabled && rb.tools.length > 0) {
+				rb.tools[rb.tools.length - 1].cache_control = { type: "ephemeral" };
+			}
 		}
 
 		// Add tool_choice
@@ -214,7 +300,109 @@ export class AnthropicApi extends CommonApi<AnthropicMessage, AnthropicRequestBo
 			}
 		}
 
+		// Anthropic accepts at most 4 `cache_control` breakpoints per request. The host (Copilot)
+		// may emit several breakpoints inside `messages` via its own caching strategy; combined with
+		// the system + last-tool breakpoints we add above, the total can exceed the cap and the API
+		// returns 400. Strip the *earliest* in-message breakpoints first — Anthropic's cache lookup
+		// matches the longest cached prefix, so the most recent (rightmost) breakpoints carry the
+		// most value, and the system / tools breakpoints sit at the very front of the prefix and
+		// rarely change, so they're worth keeping.
+		if (this._cacheControlEnabled) {
+			this.enforceCacheControlBudget(rb);
+		}
+
 		return rb;
+	}
+
+	/**
+	 * Anthropic accepts at most 4 `cache_control` breakpoints per request. This method counts
+	 * every breakpoint currently set on `system`, `tools`, and each message content block, and
+	 * if the total exceeds 4, strips breakpoints in a stable priority order:
+	 *   1. In-message breakpoints, earliest first (least valuable — covers shortest prefix).
+	 *   2. The tools breakpoint, if still over budget after step 1.
+	 *   3. The system breakpoint, last (most valuable — covers longest stable prefix).
+	 */
+	private enforceCacheControlBudget(rb: AnthropicRequestBody): void {
+		const MAX = 4;
+
+		// Tally and locate every breakpoint we might need to strip.
+		let total = 0;
+		const systemBlocksWithCC: AnthropicTextBlock[] = [];
+		const toolsWithCC: { name: string }[] = [];
+		const msgBlocksWithCC: { cache_control?: AnthropicCacheControl }[] = [];
+
+		if (Array.isArray(rb.system)) {
+			for (const block of rb.system) {
+				if (block.cache_control) {
+					systemBlocksWithCC.push(block);
+					total++;
+				}
+			}
+		}
+		if (rb.tools) {
+			for (const tool of rb.tools) {
+				if (tool.cache_control) {
+					toolsWithCC.push(tool);
+					total++;
+				}
+			}
+		}
+		for (const msg of rb.messages) {
+			if (Array.isArray(msg.content)) {
+				for (const block of msg.content) {
+					const b = block as { cache_control?: AnthropicCacheControl };
+					if (b.cache_control) {
+						msgBlocksWithCC.push(b);
+						total++;
+					}
+				}
+			}
+		}
+
+		if (total <= MAX) {
+			return;
+		}
+
+		let toRemove = total - MAX;
+		const removalLog: string[] = [];
+
+		// Step 1: drop earliest in-message breakpoints (push-order == document order here because
+		// we walked messages front-to-back, and each message's blocks front-to-back).
+		for (const block of msgBlocksWithCC) {
+			if (toRemove === 0) {
+				break;
+			}
+			delete block.cache_control;
+			toRemove--;
+			removalLog.push("message");
+		}
+
+		// Step 2: drop tools breakpoint(s) if still over budget.
+		for (const tool of toolsWithCC) {
+			if (toRemove === 0) {
+				break;
+			}
+			delete (tool as { cache_control?: unknown }).cache_control;
+			toRemove--;
+			removalLog.push("tool");
+		}
+
+		// Step 3: as a last resort, drop the system breakpoint(s).
+		for (const block of systemBlocksWithCC) {
+			if (toRemove === 0) {
+				break;
+			}
+			delete block.cache_control;
+			toRemove--;
+			removalLog.push("system");
+		}
+
+		logger.debug("anthropic.cache_control.trim", {
+			modelId: this._modelId,
+			originalCount: total,
+			finalCount: MAX,
+			dropped: removalLog,
+		});
 	}
 
 	/**

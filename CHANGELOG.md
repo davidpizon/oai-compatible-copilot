@@ -1,5 +1,10 @@
 # Change Log
 
+## Unreleased
+
+- Feat(anthropic): Enable prompt caching. The system prompt and the last tool definition are now marked with `cache_control: { type: "ephemeral" }`, and in-message `cache_control` markers emitted by Copilot (`LanguageModelDataPart` with mimeType `"cache_control"`) are forwarded to Anthropic instead of being silently dropped. Add a per-model `cache_control` boolean (default `true`) to disable it for providers that reject the field.
+- Fix(anthropic): Cap total `cache_control` breakpoints at 4 per request (Anthropic's hard limit). When Copilot's own in-message breakpoints push the request over the cap, strip earliest in-message ones first, then tools, then system — preserving the highest-value (most recent / largest-prefix) breakpoints.
+
 ## 0.4.1 (2026-05-14)
 
 - Feat(usage): Implement token usage reporting for Context Window widget

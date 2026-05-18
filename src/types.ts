@@ -94,6 +94,20 @@ export interface HFModelItem {
 	 * If not specified, falls back to global `oaicopilot.delay` configuration.
 	 */
 	delay?: number;
+
+	/**
+	 * Enable Anthropic prompt caching breakpoints (only effective when `apiMode` is `"anthropic"`).
+	 *
+	 * When enabled, the provider will:
+	 *   - Convert `system` into a structured array and mark it with `cache_control: { type: "ephemeral" }`.
+	 *   - Mark the last entry of `tools` with `cache_control: { type: "ephemeral" }`.
+	 *   - Honor in-message `cache_control` markers emitted by the host (Copilot) — i.e. a
+	 *     `LanguageModelDataPart` with `mimeType === "cache_control"` is converted to a real
+	 *     Anthropic `cache_control` field on the preceding content block.
+	 *
+	 * Defaults to `true`. Set to `false` for upstream providers that reject `cache_control`.
+	 */
+	cache_control?: boolean;
 }
 
 /**
