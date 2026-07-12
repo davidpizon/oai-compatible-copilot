@@ -2,6 +2,8 @@
 
 Thanks for taking the time to start contributing. This guide will help you get started with the project.
 
+This extension is the connective layer between GitHub Copilot Chat and any OpenAI/Ollama/Anthropic/Gemini-compatible backend — including Custom Agentic Routers and Agentic Proxy Orchestrators. Keep that in mind for contributions: changes should stay protocol-agnostic (they shouldn't assume a specific hosted provider) so the extension keeps working as a generic bridge for whatever endpoint a user configures.
+
 Also the project welcome serious and willing maintainers.
 
 ## How to contribute?

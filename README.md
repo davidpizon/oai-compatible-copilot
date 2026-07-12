@@ -4,14 +4,24 @@
 
 # OAI Compatible Provider for Copilot
 
-**A VSCode extension to use OpenAI/Ollama/Anthropic/Gemini API Providers in GitHub Copilot Chat** 🔥
-
-English | [简体中文](README.zh-CN.md)
+**The client-side adapter that connects GitHub Copilot Chat to any OpenAI/Ollama/Anthropic/Gemini-compatible backend — including Custom Agentic Routers like [AgenticRouter](https://github.com/davidpizon/agent-as-a-router)** 🔥
 
 </div>
 
 [![CI](https://github.com/JohnnyZ93/oai-compatible-copilot/actions/workflows/release.yml/badge.svg)](https://github.com/JohnnyZ93/oai-compatible-copilot/actions)
 [![License](https://img.shields.io/github/license/JohnnyZ93/oai-compatible-copilot?color=orange&label=License)](https://github.com/JohnnyZ93/oai-compatible-copilot/blob/main/LICENSE)
+
+## Why this exists
+
+VS Code's Copilot Chat model picker only knows how to talk to a fixed set of built-in providers. This extension registers itself as an additional `LanguageModelChatProvider`, giving Copilot Chat a generic, OpenAI/Ollama/Anthropic/Gemini-compatible client it can send requests through.
+
+Because that client only cares about protocol compatibility — not who's on the other end — you can point `oaicopilot.baseUrl` at more than a single hosted model. If you run a **Custom Agentic Router** or **Agentic Proxy Orchestrator** — such as [**AgenticRouter**](https://github.com/davidpizon/agent-as-a-router), a local reverse proxy that fronts multiple backend models behind one OpenAI-compatible endpoint and picks which model handles each request under a performance/cost tradeoff — this extension is what makes it easy to configure VS Code to use it. AgenticRouter (like most system/local proxies) expects clients to be pointed at it explicitly via `base_url`; Copilot Chat has no built-in way to do that, so this extension is the piece that fills the gap. In that setup:
+
+- VS Code / Copilot Chat stays the editor-side UI.
+- This extension is the connective layer — set `oaicopilot.baseUrl` to your AgenticRouter proxy address (e.g. `http://127.0.0.1:5001`) and it forwards chat requests, tool calls, and streaming responses to it.
+- AgenticRouter decides what happens next: which backend model handles the request and what comes back.
+
+The extension itself doesn't implement routing logic — that's AgenticRouter's job. What it provides is the standards-compliant bridge and the settings/UI to configure it, alongside first-class support for talking directly to OpenAI, Ollama, Anthropic, and Gemini APIs when you don't need a router at all.
 
 ## ✨ Features
 - **Multi-API support**: OpenAI/Ollama/Anthropic/Gemini APIs (ModelScope, SiliconFlow, DeepSeek...)
@@ -31,6 +41,9 @@ English | [简体中文](README.zh-CN.md)
 - OpenAI-compatible provider API key.
 
 ## ⚡ Quick Start
+
+Setup means giving the extension a connection string (`baseUrl`) and a list of endpoints (`models`) to expose in the model picker — whether that connection string points at a single provider's API or at a Custom Agentic Router's front door, like [AgenticRouter](https://github.com/davidpizon/agent-as-a-router)'s local proxy.
+
 1. Install the OAI Compatible Provider for Copilot extension [here](https://marketplace.visualstudio.com/items?itemName=johnny-zhao.oai-compatible-copilot).
 2. Open VS Code Settings and configure `oaicopilot.baseUrl` and `oaicopilot.models`.
 3. Open GitHub Copilot Chat interface.
@@ -190,6 +203,8 @@ Mixed configuration with multiple API modes:
 </details>
 
 ## ✨ Multi-Provider Guide
+
+Each entry in `oaicopilot.models` is an endpoint in your routing mesh — a direct provider, a self-hosted model, or a route exposed by a Custom Agentic Router. Mix and match freely; the extension doesn't care which kind of backend answers, only that it speaks a supported protocol.
 
 > `owned_by` (alias: `provider` / `provide`) in model config is used for grouping provider-specific API keys. The storage key is `oaicopilot.apiKey.<providerIdLowercase>`.
 
