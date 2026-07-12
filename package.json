@@ -487,7 +487,7 @@
 		"@types/vscode": "^1.125.0",
 		"@vscode/test-cli": "^0.0.15",
 		"@vscode/test-electron": "^2.5.2",
-		"eslint": "^9.13.0",
+		"eslint": "^10.7.0",
 		"prettier": "^3.9.5",
 		"typescript": "^7.0.2",
 		"typescript-eslint": "^8.63.0"
