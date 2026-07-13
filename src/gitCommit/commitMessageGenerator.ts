@@ -5,9 +5,8 @@ import { OpenaiApi } from "../openai/openaiApi";
 import { OpenaiResponsesApi } from "../openai/openaiResponsesApi";
 import { AnthropicApi } from "../anthropic/anthropicApi";
 import { OllamaApi } from "../ollama/ollamaApi";
-import { normalizeUserModels } from "../utils";
+import { resolveSingleModel } from "../provideModel";
 import { logger } from "../logger";
-import type { HFModelItem } from "../types";
 
 /**
  * Git commit message generator module
@@ -170,25 +169,16 @@ async function performCommitMsgGeneration(secrets: vscode.SecretStorage, gitDiff
 		prompts.push(truncatedDiff);
 		const prompt = prompts.join("\n\n");
 
-		// Get user models from configuration
-		const userModels = normalizeUserModels(config.get<unknown>("oaicopilot.models", []));
-
-		// Filter models that are marked for commit generation
-		const commitModels = userModels.filter((model: HFModelItem) => model.useForCommitGeneration === true);
-
-		if (commitModels.length === 0) {
-			throw new Error(
-				"No models configured for commit message generation. Please set 'useForCommitGeneration' to true for at least one model in your configuration."
-			);
+		// Use the single configured model (baseUrl + modelId + apiMode).
+		const selectedModel = resolveSingleModel(config);
+		if (!selectedModel) {
+			throw new Error("No model configured. Please set 'oaicopilot.modelId' in your settings.");
 		}
-
-		// Use the first model marked for commit generation
-		const selectedModel = commitModels[0];
 		modelId = selectedModel.id;
 		logger.info("commit.start", { modelId });
 
-		// Get API key for the model's provider
-		const apiKey = await ensureApiKey(secrets, selectedModel.owned_by);
+		// Get the single API key for the configured endpoint.
+		const apiKey = await ensureApiKey(secrets);
 		if (!apiKey) {
 			throw new Error("OAI Compatible API key not found");
 		}
@@ -275,21 +265,8 @@ function removeThinkTags(text: string): string {
 }
 
 /**
- * Ensure an API key exists in SecretStorage
- * @param provider provider name to get provider-specific API key.
+ * Ensure the single API key exists in SecretStorage.
  */
-async function ensureApiKey(secrets: vscode.SecretStorage, provider: string): Promise<string | undefined> {
-	let apiKey: string | undefined;
-	if (provider && provider.trim() !== "") {
-		const normalizedProvider = provider.trim().toLowerCase();
-		const providerKey = `oaicopilot.apiKey.${normalizedProvider}`;
-		apiKey = await secrets.get(providerKey);
-	}
-
-	// Fall back to generic API key
-	if (!apiKey) {
-		apiKey = await secrets.get("oaicopilot.apiKey");
-	}
-
-	return apiKey;
+async function ensureApiKey(secrets: vscode.SecretStorage): Promise<string | undefined> {
+	return secrets.get("oaicopilot.apiKey");
 }

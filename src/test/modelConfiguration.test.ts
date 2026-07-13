@@ -56,51 +56,46 @@ suite("modelConfiguration", () => {
 		);
 	});
 
-	test("registers deepseek-v4-flash with reasoning effort metadata", async () => {
+	test("exposes exactly one model built from the flat settings", async () => {
 		const config = vscode.workspace.getConfiguration();
-		const previousModels = config.get<unknown>("oaicopilot.models", []);
+		const previousModelId = config.get<unknown>("oaicopilot.modelId", "");
+		const previousModelName = config.get<unknown>("oaicopilot.modelName", "");
 		const cts = new vscode.CancellationTokenSource();
-		const model: HFModelItem = { ...deepSeekModel, id: "deepseek-v4-flash", displayName: undefined };
 
 		try {
-			await config.update("oaicopilot.models", [model], vscode.ConfigurationTarget.Global);
+			await config.update("oaicopilot.modelId", "glm-4.6", vscode.ConfigurationTarget.Global);
+			await config.update("oaicopilot.modelName", "Agentic Router", vscode.ConfigurationTarget.Global);
 
 			const infos = await prepareLanguageModelChatInformation({ silent: true }, cts.token, {} as vscode.SecretStorage);
-			const info = infos.find((item) => item.id === "deepseek-v4-flash") as ModelPickerChatInformation | undefined;
 
-			assert.ok(info, "deepseek-v4-flash should be registered");
-			assert.strictEqual(info.name, "deepseek-v4-flash");
-			assert.strictEqual(info.detail, "deepseek (OAICopilot)");
+			assert.strictEqual(infos.length, 1, "exactly one model should be exposed");
+			const info = infos[0] as ModelPickerChatInformation;
+			assert.strictEqual(info.id, "glm-4.6");
+			assert.strictEqual(info.name, "Agentic Router");
 			assert.strictEqual(info.isUserSelectable, true);
-			assert.deepStrictEqual(info.configurationSchema, createReasoningEffortConfigurationSchema("medium"));
-		} finally {
-			cts.dispose();
-			await config.update("oaicopilot.models", previousModels, vscode.ConfigurationTarget.Global);
-		}
-	});
-
-	test("does not register reasoning effort metadata when the default is empty", async () => {
-		const config = vscode.workspace.getConfiguration();
-		const previousModels = config.get<unknown>("oaicopilot.models", []);
-		const cts = new vscode.CancellationTokenSource();
-		const model: HFModelItem = {
-			...deepSeekModel,
-			id: "deepseek-v4-flash",
-			displayName: undefined,
-			reasoning_effort: undefined,
-		};
-
-		try {
-			await config.update("oaicopilot.models", [model], vscode.ConfigurationTarget.Global);
-
-			const infos = await prepareLanguageModelChatInformation({ silent: true }, cts.token, {} as vscode.SecretStorage);
-			const info = infos.find((item) => item.id === "deepseek-v4-flash") as ModelPickerChatInformation | undefined;
-
-			assert.ok(info, "deepseek-v4-flash should be registered");
+			assert.strictEqual(info.isDefault, true);
+			// The single-model provider never surfaces the reasoning-effort picker.
 			assert.strictEqual(info.configurationSchema, undefined);
 		} finally {
 			cts.dispose();
-			await config.update("oaicopilot.models", previousModels, vscode.ConfigurationTarget.Global);
+			await config.update("oaicopilot.modelId", previousModelId, vscode.ConfigurationTarget.Global);
+			await config.update("oaicopilot.modelName", previousModelName, vscode.ConfigurationTarget.Global);
+		}
+	});
+
+	test("exposes no model when the model id is empty", async () => {
+		const config = vscode.workspace.getConfiguration();
+		const previousModelId = config.get<unknown>("oaicopilot.modelId", "");
+		const cts = new vscode.CancellationTokenSource();
+
+		try {
+			await config.update("oaicopilot.modelId", "", vscode.ConfigurationTarget.Global);
+
+			const infos = await prepareLanguageModelChatInformation({ silent: true }, cts.token, {} as vscode.SecretStorage);
+			assert.strictEqual(infos.length, 0);
+		} finally {
+			cts.dispose();
+			await config.update("oaicopilot.modelId", previousModelId, vscode.ConfigurationTarget.Global);
 		}
 	});
 
