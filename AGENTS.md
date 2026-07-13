@@ -22,6 +22,16 @@ and no "Manage Models..." flow: the model is defined by the flat settings
 the single `oaicopilot.apiKey` secret. Any backend routing/fan-out is the Agentic Router's
 job, server-side — not this extension's.
 
+> **TODO (revisit `modelId`):** We still send `oaicopilot.modelId` as the request `model`
+> field, and require it (a non-empty value drives `resolveSingleModel()` and the picker),
+> because the Agentic Router currently rejects any request without a non-empty `model` even
+> in single-model serving mode (see `RequestInterceptor.ResolveModelRouteAsync` in the
+> agent-as-a-router repo — the non-empty check runs before the forced-model override). If the
+> Agentic Router is changed to no longer require the `model` field (e.g. defaults it
+> server-side when single-model serving is forced), revisit whether `modelId` can be dropped
+> here: stop sending the `model` field to the router and remove the `oaicopilot.modelId`
+> setting entirely, exposing the single model under `oaicopilot.modelName` alone.
+
 ## Architecture
 - **Entry**: `src/extension.ts` - registers `HuggingFaceChatModelProvider` under vendor id `oaicopilot`
 - **Core Provider**: `src/provider.ts` - implements `LanguageModelChatProvider` interface

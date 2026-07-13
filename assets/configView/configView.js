@@ -8,7 +8,6 @@
 	const fields = {
 		baseUrl: () => el("baseUrl"),
 		apiKey: () => el("apiKey"),
-		modelId: () => el("modelId"),
 		modelName: () => el("modelName"),
 		apiMode: () => el("apiMode"),
 		delay: () => el("delay"),
@@ -28,7 +27,6 @@
 	function applyInit(payload) {
 		fields.baseUrl().value = payload.baseUrl ?? "";
 		fields.apiKey().value = payload.apiKey ?? "";
-		fields.modelId().value = payload.modelId ?? "";
 		fields.modelName().value = payload.modelName ?? "";
 		fields.apiMode().value = payload.apiMode ?? "openai";
 		fields.delay().value = String(payload.delay ?? 0);
@@ -45,7 +43,6 @@
 			type: "saveConfig",
 			baseUrl: fields.baseUrl().value,
 			apiKey: fields.apiKey().value,
-			modelId: fields.modelId().value,
 			modelName: fields.modelName().value,
 			apiMode: fields.apiMode().value,
 			delay: num(parseInt(fields.delay().value, 10), 0),

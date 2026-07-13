@@ -125,8 +125,8 @@
 				},
 				"oaicopilot.modelId": {
 					"type": "string",
-					"default": "",
-					"description": "The single model id sent to the endpoint and shown in the Copilot model picker (e.g. 'glm-4.6' or an Agentic Router route name). Leave empty to expose no model."
+					"default": "agentic-router",
+					"description": "The single model id sent (as the 'model' field) to the endpoint and shown in the Copilot model picker. Defaults to 'agentic-router' for single-model Agentic Router setups; set it to a configured route name (e.g. 'gpt-5.4') when the router does normal multi-model routing. Leave empty to expose no model. Not editable from the configuration UI."
 				},
 				"oaicopilot.modelName": {
 					"type": "string",
