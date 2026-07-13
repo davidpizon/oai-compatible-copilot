@@ -94,6 +94,8 @@ The extension is configured entirely through flat `oaicopilot.*` settings — th
 | `oaicopilot.modelName` | string | (Optional) Display name shown in the picker. Defaults to the model id. |
 | `oaicopilot.apiMode` | enum | Protocol used to talk to the endpoint (see [API Mode](#-api-mode)). Default `openai`. |
 | `oaicopilot.apiKey` | secret | Stored via the "OAICopilot: Set OAI Compatible Apikey" command or the config UI (not a settings.json key). |
+| `oaicopilot.allowInsecureTls` | boolean | Skip TLS certificate verification — only for `localhost`/`127.0.0.1`/`::1` endpoints (e.g. a local dev proxy with a self-signed cert). Never applied to remote hosts. Default `false`. |
+| `oaicopilot.warnOnHttp1` | boolean | Warn (once per host, via a notification + log) when a request connects over HTTP/1.1 instead of negotiating HTTP/2. Requests work either way — HTTP/2 is opportunistic. Default `true`. |
 | `oaicopilot.retry` | object | Retry behavior for API errors (`enabled`, `max_attempts`, `interval_ms`, `status_codes`). |
 | `oaicopilot.delay` | number | Minimum delay in ms between consecutive requests. Default `0`. |
 | `oaicopilot.commitLanguage` | string | Language for generated Git commit messages. Default `English`. |

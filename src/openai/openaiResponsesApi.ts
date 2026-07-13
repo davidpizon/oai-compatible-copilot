@@ -9,6 +9,7 @@ import {
 
 import type { HFModelItem } from "../types";
 import { getConfiguredReasoningEffort, isReasoningEffortPickerEnabled } from "../modelConfiguration";
+import { getDispatcher } from "../httpClient";
 import type { OpenAIToolCall } from "./openaiTypes";
 
 import {
@@ -63,10 +64,7 @@ export interface ResponsesReasoning {
 }
 
 export type ResponsesInputItem =
-	| ResponsesInputMessage
-	| ResponsesFunctionCall
-	| ResponsesFunctionCallOutput
-	| ResponsesReasoning;
+	ResponsesInputMessage | ResponsesFunctionCall | ResponsesFunctionCallOutput | ResponsesReasoning;
 
 export class OpenaiResponsesApi extends CommonApi<ResponsesInputItem, Record<string, unknown>> {
 	private _responseId: string | null = null;
@@ -724,6 +722,7 @@ export class OpenaiResponsesApi extends CommonApi<ResponsesInputItem, Record<str
 			method: "POST",
 			headers,
 			body: JSON.stringify(requestBody),
+			dispatcher: getDispatcher(),
 		});
 
 		if (!response.ok) {

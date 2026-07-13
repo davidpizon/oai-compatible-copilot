@@ -12,6 +12,7 @@ import type { HFModelItem } from "../types";
 import type { OllamaMessage, OllamaRequestBody, OllamaStreamChunk, OllamaToolCall } from "./ollamaTypes";
 
 import { isToolResultPart, collectToolResultText, convertToolsToOpenAI, mapRole } from "../utils";
+import { getDispatcher } from "../httpClient";
 
 import { CommonApi } from "../commonApi";
 import { logger } from "../logger";
@@ -317,6 +318,7 @@ export class OllamaApi extends CommonApi<OllamaMessage, OllamaRequestBody> {
 			method: "POST",
 			headers,
 			body: JSON.stringify(requestBody),
+			dispatcher: getDispatcher(),
 		});
 
 		if (!response.ok) {

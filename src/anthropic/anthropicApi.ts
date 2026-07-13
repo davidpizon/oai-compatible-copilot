@@ -8,6 +8,7 @@ import {
 } from "vscode";
 
 import type { HFModelItem } from "../types";
+import { getDispatcher } from "../httpClient";
 
 import type {
 	AnthropicMessage,
@@ -622,6 +623,7 @@ export class AnthropicApi extends CommonApi<AnthropicMessage, AnthropicRequestBo
 			method: "POST",
 			headers,
 			body: JSON.stringify(requestBody),
+			dispatcher: getDispatcher(),
 		});
 
 		if (!response.ok) {

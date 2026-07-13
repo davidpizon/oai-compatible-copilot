@@ -8,6 +8,7 @@
   - Simplified the configuration webview to a single-model settings form (no provider/model CRUD, model-list fetch, or import/export).
   - Git commit generation now uses the single configured model instead of a `useForCommitGeneration` flag.
 - Docs: Removed the "Manage Models...", "Multi-Provider Guide", multi-config, custom-header, per-model-parameter, and other multi-model sections from the README; added a flat Settings Reference. Updated AGENTS.md to describe the single-model design.
+- Feat: Requests now negotiate HTTP/2 (via ALPN) with the configured endpoint when it supports it, transparently falling back to HTTP/1.1 otherwise — no change in behavior, just faster/more efficient transport for HTTP/2-capable endpoints (e.g. a local Agentic Router). Add `oaicopilot.warnOnHttp1` (default `true`) to notify once per host when a connection falls back to HTTP/1.1, and `oaicopilot.allowInsecureTls` (default `false`) to skip TLS certificate verification for `localhost`/`127.0.0.1`/`::1` endpoints only, for local dev proxies using self-signed certificates.
 
 ## 0.4.2 (2026-05-19)
 
