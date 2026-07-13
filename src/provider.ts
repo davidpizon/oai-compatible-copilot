@@ -14,6 +14,7 @@ import type { HFModelItem } from "./types";
 import type { OllamaRequestBody } from "./ollama/ollamaTypes";
 
 import { createRetryConfig, executeWithRetry } from "./utils";
+import { getDispatcher } from "./httpClient";
 
 import { prepareLanguageModelChatInformation, resolveSingleModel } from "./provideModel";
 import { countMessageTokens } from "./provideToken";
@@ -207,6 +208,7 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 						method: "POST",
 						headers: requestHeaders,
 						body: JSON.stringify(ollamaRequestBody),
+						dispatcher: getDispatcher(),
 					});
 
 					if (!res.ok) {
@@ -250,6 +252,7 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 						method: "POST",
 						headers: requestHeaders,
 						body: JSON.stringify(requestBody),
+						dispatcher: getDispatcher(),
 					});
 
 					if (!res.ok) {
@@ -327,6 +330,7 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 							method: "POST",
 							headers: requestHeaders,
 							body: JSON.stringify(body),
+							dispatcher: getDispatcher(),
 						});
 
 						if (!res.ok) {
@@ -421,6 +425,7 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 						method: "POST",
 						headers: requestHeaders,
 						body: JSON.stringify(requestBody),
+						dispatcher: getDispatcher(),
 					});
 
 					if (!res.ok) {
@@ -460,6 +465,7 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 						method: "POST",
 						headers: requestHeaders,
 						body: JSON.stringify(requestBody),
+						dispatcher: getDispatcher(),
 					});
 
 					if (!res.ok) {

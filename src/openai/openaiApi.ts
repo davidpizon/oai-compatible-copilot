@@ -9,6 +9,7 @@ import {
 
 import type { HFModelItem, ReasoningConfig, TokenUsage } from "../types";
 import { getConfiguredReasoningEffort, isReasoningEffortPickerEnabled } from "../modelConfiguration";
+import { getDispatcher } from "../httpClient";
 
 import type {
 	OpenAIChatMessage,
@@ -513,6 +514,7 @@ export class OpenaiApi extends CommonApi<OpenAIChatMessage, Record<string, unkno
 			method: "POST",
 			headers,
 			body: JSON.stringify(requestBody),
+			dispatcher: getDispatcher(),
 		});
 
 		if (!response.ok) {

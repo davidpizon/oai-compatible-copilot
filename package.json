@@ -107,18 +107,18 @@
 			"title": "OAI Compatible Copilot",
 			"properties": {
 				"oaicopilot.logLevel": {
-				"type": "string",
-				"default": "off",
-				"enum": [
-					"off",
-					"debug",
-					"info",
-					"warn",
-					"error"
-				],
-				"description": "Debug log level. Logs are written to ~/.copilot/oaicopilot/logs/ as JSON lines. Default is 'off' (no logging)."
-			},
-			"oaicopilot.baseUrl": {
+					"type": "string",
+					"default": "off",
+					"enum": [
+						"off",
+						"debug",
+						"info",
+						"warn",
+						"error"
+					],
+					"description": "Debug log level. Logs are written to ~/.copilot/oaicopilot/logs/ as JSON lines. Default is 'off' (no logging)."
+				},
+				"oaicopilot.baseUrl": {
 					"type": "string",
 					"default": "http://127.0.0.1:5001/v1",
 					"description": "Base URL of the Agentic Router (or any OpenAI-compatible endpoint) this extension talks to. All chat requests for the single exposed model are sent here."
@@ -144,6 +144,16 @@
 					],
 					"default": "openai",
 					"description": "Protocol used to talk to the endpoint: 'openai' (Default) for OpenAI Chat Completions (/chat/completions), 'openai-responses' for OpenAI Responses (/responses), 'ollama' for Ollama (/api/chat), 'anthropic' for Anthropic (/v1/messages), 'gemini' for Gemini (*/v1beta/models/{model}:streamGenerateContent?alt=sse)."
+				},
+				"oaicopilot.allowInsecureTls": {
+					"type": "boolean",
+					"default": false,
+					"description": "Skip TLS certificate verification — only for localhost/127.0.0.1/::1 endpoints (e.g. a local dev proxy with a self-signed certificate). Never applied to remote hosts even when enabled. Leave disabled unless you understand the risk."
+				},
+				"oaicopilot.warnOnHttp1": {
+					"type": "boolean",
+					"default": true,
+					"description": "Show a warning (and log it) the first time a request connects over HTTP/1.1 instead of negotiating HTTP/2 with the configured endpoint. Requests still work either way — HTTP/2 is opportunistic, not required."
 				},
 				"oaicopilot.retry": {
 					"type": "object",
@@ -235,7 +245,8 @@
 		"build": "npx @vscode/vsce package -o extension.vsix"
 	},
 	"dependencies": {
-		"@microsoft/tiktokenizer": "^1.0.10"
+		"@microsoft/tiktokenizer": "^1.0.10",
+		"undici": "^6.27.0"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",

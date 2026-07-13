@@ -103,39 +103,6 @@ function joinPathPrefix(basePath: string, nextPath: string): string {
 	return `${aTrim || ""}${bTrim}`;
 }
 
-/**
- * Build the Gemini models list endpoint URL from a base URL.
- * Handles various baseUrl formats: bare domain, /v1beta, or /v1beta/models.
- * @param baseUrl The base URL to normalize.
- * @returns The full models list endpoint URL.
- */
-function buildGeminiModelsUrl(baseUrl: string): string {
-	const trimmed = baseUrl.replace(/\/+$/, "");
-	if (trimmed.endsWith("/v1beta/models")) {
-		return trimmed;
-	}
-	if (trimmed.endsWith("/v1beta")) {
-		return `${trimmed}/models`;
-	}
-	return `${trimmed}/v1beta/models`;
-}
-
-/**
- * Normalize a Gemini model identifier by stripping the "models/" prefix.
- * @param name The model name from the API response.
- * @param displayName The display name from the API response.
- * @returns A normalized model ID suitable for user configuration.
- */
-function normalizeGeminiModelIdForListing(name?: string, displayName?: string): string {
-	if (name && name.trim()) {
-		if (name.startsWith("models/")) {
-			return name.slice("models/".length);
-		}
-		return name;
-	}
-	return displayName?.trim() || "unknown";
-}
-
 function normalizeGeminiModelPath(modelId: string): string {
 	const raw = (modelId || "").trim();
 	if (!raw) {
@@ -553,9 +520,9 @@ export class GeminiApi extends CommonApi<GeminiChatMessage, GeminiGenerateConten
 		}): boolean => {
 			return Boolean(
 				extracted.toolResults.length > 0 &&
-					!extracted.text &&
-					extracted.imageParts.length === 0 &&
-					extracted.toolCalls.length === 0
+				!extracted.text &&
+				extracted.imageParts.length === 0 &&
+				extracted.toolCalls.length === 0
 			);
 		};
 
@@ -1036,72 +1003,4 @@ export class GeminiApi extends CommonApi<GeminiChatMessage, GeminiGenerateConten
 	): AsyncGenerator<{ type: "text"; text: string }> {
 		throw new Error("Method not implemented.");
 	}
-}
-
-/**
- * Fetch available models from a Gemini API endpoint.
- * Supports both native Google Gemini and Langdock Google proxy endpoints.
- * @param baseUrl The Gemini API base URL.
- * @param apiKey The API key for authentication.
- * @param customHeaders Optional custom headers to merge with defaults.
- * @returns A promise that resolves to an array of model items.
- */
-export async function fetchGeminiModels(
-	baseUrl: string,
-	apiKey: string,
-	customHeaders?: Record<string, string>
-): Promise<HFModelItem[]> {
-	const listUrl = buildGeminiModelsUrl(baseUrl);
-	const ownedBy = baseUrl.includes("langdock.com") ? "langdock" : "google";
-	const headers = CommonApi.prepareHeaders(apiKey, "gemini", customHeaders);
-	headers["Accept"] = "application/json";
-
-	const models: HFModelItem[] = [];
-	let nextPageToken: string | undefined;
-	let page = 0;
-
-	while (page < 10) {
-		const url = new URL(listUrl);
-		if (nextPageToken) {
-			url.searchParams.set("pageToken", nextPageToken);
-		}
-
-		const resp = await fetch(url.toString(), {
-			method: "GET",
-			headers,
-		});
-		if (!resp.ok) {
-			let errorText = "";
-			try {
-				errorText = await resp.text();
-			} catch (error) {
-				console.error("[OAI Compatible Model Provider] Failed to read response text", error);
-			}
-			throw new Error(
-				`Gemini API error: [${resp.status}] ${resp.statusText}${errorText ? `\n${errorText}` : ""}\nURL: ${url.toString()}`
-			);
-		}
-
-		const parsed = (await resp.json()) as import("./geminiTypes").GeminiModelListResponse;
-		const entries = parsed.models ?? [];
-		for (const entry of entries) {
-			const id = normalizeGeminiModelIdForListing(entry.name, entry.displayName);
-			models.push({
-				id,
-				displayName: entry.displayName || id,
-				owned_by: ownedBy,
-				context_length: entry.inputTokenLimit,
-				max_completion_tokens: entry.outputTokenLimit,
-				apiMode: "gemini",
-			} as HFModelItem);
-		}
-
-		nextPageToken = parsed.nextPageToken;
-		if (!nextPageToken) {
-			break;
-		}
-		page += 1;
-	}
-
-	return models;
 }
