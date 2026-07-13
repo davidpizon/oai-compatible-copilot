@@ -12,7 +12,6 @@ interface RetryPayload {
 interface InitPayload {
 	baseUrl: string;
 	apiKey: string;
-	modelId: string;
 	modelName: string;
 	apiMode: HFApiMode;
 	delay: number;
@@ -27,7 +26,6 @@ type IncomingMessage =
 			type: "saveConfig";
 			baseUrl: string;
 			apiKey: string;
-			modelId: string;
 			modelName: string;
 			apiMode: string;
 			delay: number;
@@ -135,7 +133,6 @@ export class ConfigViewPanel {
 		const config = vscode.workspace.getConfiguration();
 		const baseUrl = config.get<string>("oaicopilot.baseUrl", "");
 		const apiKey = (await this.secrets.get("oaicopilot.apiKey")) ?? "";
-		const modelId = config.get<string>("oaicopilot.modelId", "");
 		const modelName = config.get<string>("oaicopilot.modelName", "");
 		const apiMode = normalizeApiMode(config.get<string>("oaicopilot.apiMode", "openai"));
 		const delay = config.get<number>("oaicopilot.delay", 0);
@@ -150,7 +147,6 @@ export class ConfigViewPanel {
 		const payload: InitPayload = {
 			baseUrl,
 			apiKey,
-			modelId,
 			modelName,
 			apiMode,
 			delay,
@@ -164,7 +160,6 @@ export class ConfigViewPanel {
 	private async saveConfig(message: Extract<IncomingMessage, { type: "saveConfig" }>) {
 		const config = vscode.workspace.getConfiguration();
 		await config.update("oaicopilot.baseUrl", message.baseUrl.trim(), vscode.ConfigurationTarget.Global);
-		await config.update("oaicopilot.modelId", message.modelId.trim(), vscode.ConfigurationTarget.Global);
 		await config.update("oaicopilot.modelName", message.modelName.trim(), vscode.ConfigurationTarget.Global);
 		await config.update("oaicopilot.apiMode", normalizeApiMode(message.apiMode), vscode.ConfigurationTarget.Global);
 		await config.update("oaicopilot.delay", message.delay, vscode.ConfigurationTarget.Global);

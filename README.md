@@ -90,7 +90,7 @@ The extension is configured entirely through flat `oaicopilot.*` settings — th
 | Setting | Type | Description |
 |---|---|---|
 | `oaicopilot.baseUrl` | string | Base URL of the Agentic Router (or any OpenAI-compatible) endpoint. All requests are sent here. |
-| `oaicopilot.modelId` | string | The model id sent upstream and shown in the Copilot model picker. Leave empty to expose no model. |
+| `oaicopilot.modelId` | string | The model id sent (as the `model` field) upstream and shown in the Copilot model picker. Defaults to `agentic-router`. Set to a configured route name (e.g. `gpt-5.4`) for normal multi-model routing; empty exposes no model. Edit via `settings.json` — not shown in the configuration UI. |
 | `oaicopilot.modelName` | string | (Optional) Display name shown in the picker. Defaults to the model id. |
 | `oaicopilot.apiMode` | enum | Protocol used to talk to the endpoint (see [API Mode](#-api-mode)). Default `openai`. |
 | `oaicopilot.apiKey` | secret | Stored via the "OAICopilot: Set OAI Compatible Apikey" command or the config UI (not a settings.json key). |
