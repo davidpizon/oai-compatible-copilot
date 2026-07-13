@@ -553,9 +553,9 @@ export class GeminiApi extends CommonApi<GeminiChatMessage, GeminiGenerateConten
 		}): boolean => {
 			return Boolean(
 				extracted.toolResults.length > 0 &&
-					!extracted.text &&
-					extracted.imageParts.length === 0 &&
-					extracted.toolCalls.length === 0
+				!extracted.text &&
+				extracted.imageParts.length === 0 &&
+				extracted.toolCalls.length === 0
 			);
 		};
 
@@ -1052,14 +1052,17 @@ export async function fetchGeminiModels(
 	customHeaders?: Record<string, string>
 ): Promise<HFModelItem[]> {
 	const listUrl = buildGeminiModelsUrl(baseUrl);
+	// Detect the langdock proxy by hostname (not a substring of the raw string, which would
+	// also match e.g. "langdock.com.evil.example"). Normalize first so a scheme-less baseUrl
+	// (e.g. "langdock.com") still parses; anything unparseable keeps the default "google".
 	let ownedBy: "langdock" | "google" = "google";
 	try {
-		const hostname = new URL(baseUrl).hostname.toLowerCase();
+		const hostname = new URL(normalizeBaseUrl(baseUrl)).hostname.toLowerCase();
 		if (hostname === "langdock.com" || hostname.endsWith(".langdock.com")) {
 			ownedBy = "langdock";
 		}
 	} catch {
-		ownedBy = "google";
+		// Unparseable baseUrl — keep the default "google".
 	}
 	const headers = CommonApi.prepareHeaders(apiKey, "gemini", customHeaders);
 	headers["Accept"] = "application/json";
