@@ -13,9 +13,9 @@ import type { HFModelItem } from "./types";
 
 import type { OllamaRequestBody } from "./ollama/ollamaTypes";
 
-import { parseModelId, createRetryConfig, executeWithRetry, normalizeUserModels } from "./utils";
+import { createRetryConfig, executeWithRetry } from "./utils";
 
-import { prepareLanguageModelChatInformation } from "./provideModel";
+import { prepareLanguageModelChatInformation, resolveSingleModel } from "./provideModel";
 import { countMessageTokens } from "./provideToken";
 import { updateContextStatusBar } from "./statusBar";
 import { OllamaApi } from "./ollama/ollamaApi";
@@ -108,31 +108,19 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 		};
 		const requestStartTime = Date.now();
 		try {
-			// get model config from user settings
+			// Resolve the single configured model (baseUrl + modelId + apiMode).
 			const config = vscode.workspace.getConfiguration();
-			const userModels = normalizeUserModels(config.get<unknown>("oaicopilot.models", []));
+			const um: HFModelItem = resolveSingleModel(config) ?? {
+				id: model.id,
+				owned_by: "",
+				apiMode: "openai",
+				baseUrl: config.get<string>("oaicopilot.baseUrl", ""),
+			};
+			// The id the picker reports is the id we send upstream — no config-id suffixes.
+			const baseId = um.id;
 
-			// Parse model ID to handle config ID
-			const parsedModelId = parseModelId(model.id);
-
-			// Find matching user model configuration
-			// Prioritize matching models with same base ID and config ID
-			// If no config ID, match models with same base ID
-			let um: HFModelItem | undefined = userModels.find(
-				(um) =>
-					um.id === parsedModelId.baseId &&
-					((parsedModelId.configId && um.configId === parsedModelId.configId) ||
-						(!parsedModelId.configId && !um.configId))
-			);
-
-			// If still no model found, try to find any model matching the base ID (most lenient match, for backward compatibility)
-			if (!um) {
-				um = userModels.find((um) => um.id === parsedModelId.baseId);
-			}
-
-			// Check if using Ollama native API mode
-			const apiMode = um?.apiMode ?? "openai";
-			const baseUrl = um?.baseUrl || config.get<string>("oaicopilot.baseUrl", "");
+			const apiMode = um.apiMode ?? "openai";
+			const baseUrl = um.baseUrl || config.get<string>("oaicopilot.baseUrl", "");
 
 			logger.info("request.start", {
 				modelId: model.id,
@@ -172,15 +160,10 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 				}
 			}
 
-			// Get API key for the model's provider
-			const provider = um?.owned_by;
-			const useGenericKey = !um?.baseUrl;
-			const modelApiKey = await this.ensureApiKey(useGenericKey, provider);
+			// Get the single API key for the configured endpoint.
+			const modelApiKey = await this.ensureApiKey();
 			if (!modelApiKey) {
-				logger.warn("apiKey.missing", {
-					provider: provider ?? "",
-					useGenericKey,
-				});
+				logger.warn("apiKey.missing", {});
 				throw new Error("OAI Compatible API key not found");
 			}
 
@@ -207,7 +190,7 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 				const ollamaMessages = ollamaApi.convertMessages(messages, modelConfig);
 
 				let ollamaRequestBody: OllamaRequestBody = {
-					model: parsedModelId.baseId,
+					model: baseId,
 					messages: ollamaMessages,
 					stream: true,
 				};
@@ -248,7 +231,7 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 
 				// requestBody
 				let requestBody: AnthropicRequestBody = {
-					model: parsedModelId.baseId,
+					model: baseId,
 					messages: anthropicMessages,
 					stream: true,
 				};
@@ -288,7 +271,7 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 				// OpenAI Responses API mode
 				const openaiResponsesApi = new OpenaiResponsesApi(model.id);
 				const normalizedBaseUrl = BASE_URL.replace(/\/+$/, "");
-				const statefulModelId = parsedModelId.baseId;
+				const statefulModelId = baseId;
 
 				// Convert full history once (also extracts system `instructions`).
 				const fullInput = openaiResponsesApi.convertMessages(messages, modelConfig);
@@ -313,7 +296,7 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 
 				// requestBody
 				let requestBody: Record<string, unknown> = {
-					model: parsedModelId.baseId,
+					model: baseId,
 					input,
 					stream: true,
 				};
@@ -323,7 +306,7 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 				// Add prompt_cache_key to enable OpenAI prompt caching.
 				// Without this parameter, cached_tokens is always 0 even with identical requests.
 				if (!requestBody.prompt_cache_key) {
-					requestBody.prompt_cache_key = `oaicopilot-${parsedModelId.baseId}`;
+					requestBody.prompt_cache_key = `oaicopilot-${baseId}`;
 				}
 				// send Responses API request with retry
 				const url = `${normalizedBaseUrl}/responses`;
@@ -375,7 +358,7 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 					this._openaiResponsesPreviousResponseIdUnsupportedBaseUrls.add(normalizedBaseUrl);
 
 					let fallbackBody: Record<string, unknown> = {
-						model: parsedModelId.baseId,
+						model: baseId,
 						input: fullInput,
 						stream: true,
 					};
@@ -427,7 +410,7 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 				}
 				requestBody = geminiApi.prepareRequestBody(requestBody, um, options);
 
-				const url = buildGeminiGenerateContentUrl(BASE_URL, parsedModelId.baseId, true);
+				const url = buildGeminiGenerateContentUrl(BASE_URL, baseId, true);
 				logger.debug("request.body", { url, requestBody });
 				if (!url) {
 					throw new Error("Invalid Gemini base URL configuration.");
@@ -462,7 +445,7 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 
 				// requestBody
 				let requestBody: Record<string, unknown> = {
-					model: parsedModelId.baseId,
+					model: baseId,
 					messages: openaiMessages,
 					stream: true,
 					stream_options: { include_usage: true },
@@ -517,38 +500,12 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 	}
 
 	/**
-	 * Ensure an API key exists in SecretStorage, optionally prompting the user when not silent.
-	 * @param useGenericKey If true, use generic API key.
-	 * @param provider Optional provider name to get provider-specific API key.
+	 * Ensure the single API key exists in SecretStorage, prompting the user when missing.
 	 */
-	private async ensureApiKey(useGenericKey: boolean, provider?: string): Promise<string | undefined> {
-		// Try to get provider-specific API key first
-		let apiKey: string | undefined;
-		if (provider && provider.trim() !== "") {
-			const normalizedProvider = provider.trim().toLowerCase();
-			const providerKey = `oaicopilot.apiKey.${normalizedProvider}`;
-			apiKey = await this.secrets.get(providerKey);
+	private async ensureApiKey(): Promise<string | undefined> {
+		let apiKey = await this.secrets.get("oaicopilot.apiKey");
 
-			if (!apiKey && !useGenericKey) {
-				const entered = await vscode.window.showInputBox({
-					title: `OAI Compatible API Key for ${normalizedProvider}`,
-					prompt: `Enter your OAI Compatible API key for ${normalizedProvider}`,
-					ignoreFocusOut: true,
-					password: true,
-				});
-				if (entered && entered.trim()) {
-					apiKey = entered.trim();
-					await this.secrets.store(providerKey, apiKey);
-				}
-			}
-		}
-
-		// Fall back to generic API key
 		if (!apiKey) {
-			apiKey = await this.secrets.get("oaicopilot.apiKey");
-		}
-
-		if (!apiKey && useGenericKey) {
 			const entered = await vscode.window.showInputBox({
 				title: "OAI Compatible API Key",
 				prompt: "Enter your OAI Compatible API key",

@@ -378,3 +378,41 @@ button:not(.secondary):not(.danger) {
 	line-height: 1.4;
 	padding: 4px 0;
 }
+
+/* Single-model configuration view */
+#configSection .row {
+	align-items: flex-start;
+	margin-bottom: 12px;
+}
+#configSection h3 {
+	margin: 18px 0 8px;
+	font-size: 13px;
+	color: var(--vscode-descriptionForeground);
+	text-transform: uppercase;
+	letter-spacing: 0.4px;
+}
+.intro {
+	margin: 0 0 8px;
+	color: var(--vscode-descriptionForeground);
+	font-size: 12px;
+}
+.checkbox-field label {
+	font-weight: 500;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+.checkbox-field input[type="checkbox"] {
+	width: auto;
+	margin: 0;
+	accent-color: var(--vscode-button-background);
+}
+button.primary {
+	background: var(--vscode-button-background);
+	color: var(--vscode-button-foreground);
+}
+.status {
+	align-self: center;
+	color: var(--vscode-descriptionForeground);
+	font-size: 12px;
+}

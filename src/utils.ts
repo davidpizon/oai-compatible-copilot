@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import type { HFModelItem, RetryConfig } from "./types";
+import type { RetryConfig } from "./types";
 import { OpenAIFunctionToolDef } from "./openai/openaiTypes";
 
 import { logger } from "./logger";
@@ -24,58 +24,6 @@ const networkErrorPatterns = [
 	"network error",
 	"NetworkError",
 ];
-
-// Model ID parsing helper
-export interface ParsedModelId {
-	baseId: string;
-	configId?: string;
-}
-
-export function getModelProviderId(model: unknown): string {
-	if (!model || typeof model !== "object") {
-		return "";
-	}
-	const obj = model as Record<string, unknown>;
-	const pick = (v: unknown): string => (typeof v === "string" ? v.trim() : "");
-	return (
-		pick(obj.owned_by) ||
-		pick(obj.provide) ||
-		pick(obj.provider) ||
-		pick(obj.ownedBy) ||
-		pick(obj.owner) ||
-		pick(obj.vendor)
-	);
-}
-
-export function normalizeUserModels(models: unknown): HFModelItem[] {
-	const list = Array.isArray(models) ? models : [];
-	const out: HFModelItem[] = [];
-	for (const item of list) {
-		if (!item || typeof item !== "object") {
-			continue;
-		}
-		const provider = getModelProviderId(item);
-		out.push({ ...(item as HFModelItem), owned_by: provider });
-	}
-	return out;
-}
-
-/**
- * Parse a model ID that may contain a configuration ID separator.
- * Format: "baseId::configId" or just "baseId"
- */
-export function parseModelId(modelId: string): ParsedModelId {
-	const parts = modelId.split("::");
-	if (parts.length >= 2) {
-		return {
-			baseId: parts[0],
-			configId: parts.slice(1).join("::"), // In case configId itself contains '::'
-		};
-	}
-	return {
-		baseId: modelId,
-	};
-}
 
 /**
  * Map VS Code message role to OpenAI message role string.

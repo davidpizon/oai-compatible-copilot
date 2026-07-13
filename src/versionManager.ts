@@ -8,7 +8,7 @@ export class VersionManager {
 	 */
 	static getVersion(): string {
 		if (this._version === null) {
-			const extension = vscode.extensions.getExtension("johnny-zhao.oai-compatible-copilot");
+			const extension = vscode.extensions.getExtension("davidpizon.oai-compatible-copilot");
 			this._version = extension?.packageJSON?.version ?? "unknown";
 		}
 		return this._version!;
@@ -30,7 +30,7 @@ export class VersionManager {
 		return {
 			name: "oai-compatible-copilot",
 			version: this.getVersion(),
-			author: "johnny-zhao",
+			author: "davidpizon",
 		};
 	}
 }
