@@ -87,15 +87,3 @@ export interface GeminiUsageMetadata {
 	candidatesTokenCount?: number;
 	totalTokenCount?: number;
 }
-
-export interface GeminiModelListResponse {
-	models?: GeminiModelEntry[];
-	nextPageToken?: string;
-}
-
-export interface GeminiModelEntry {
-	name?: string;
-	displayName?: string;
-	inputTokenLimit?: number;
-	outputTokenLimit?: number;
-}
