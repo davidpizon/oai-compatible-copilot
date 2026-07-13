@@ -1052,7 +1052,15 @@ export async function fetchGeminiModels(
 	customHeaders?: Record<string, string>
 ): Promise<HFModelItem[]> {
 	const listUrl = buildGeminiModelsUrl(baseUrl);
-	const ownedBy = baseUrl.includes("langdock.com") ? "langdock" : "google";
+	let ownedBy: "langdock" | "google" = "google";
+	try {
+		const hostname = new URL(baseUrl).hostname.toLowerCase();
+		if (hostname === "langdock.com" || hostname.endsWith(".langdock.com")) {
+			ownedBy = "langdock";
+		}
+	} catch {
+		ownedBy = "google";
+	}
 	const headers = CommonApi.prepareHeaders(apiKey, "gemini", customHeaders);
 	headers["Accept"] = "application/json";
 
