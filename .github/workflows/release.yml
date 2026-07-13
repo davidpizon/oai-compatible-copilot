@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - 'release/**'
+permissions:
+  contents: read
+  actions: write
 jobs:
   package:
     runs-on: ubuntu-latest
