@@ -13,7 +13,7 @@ import type { HFModelItem } from "./types";
 
 import type { OllamaRequestBody } from "./ollama/ollamaTypes";
 
-import { createRetryConfig, executeWithRetry } from "./utils";
+import { createRetryConfig, executeWithRetry, describeErrorCause } from "./utils";
 import { getDispatcher } from "./httpClient";
 
 import { prepareLanguageModelChatInformation, resolveSingleModel } from "./provideModel";
@@ -485,17 +485,27 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 				await openaiApi.processStreamingResponse(response.body, trackingProgress, token);
 			}
 		} catch (err) {
+			// `fetch failed` from undici hides the real reason (ECONNREFUSED,
+			// ENOTFOUND, TLS errors, ...) on `err.cause`; pull it out so both the
+			// logs and the message shown to Copilot name the actionable cause.
+			const cause = describeErrorCause(err);
 			console.error("[OAI Compatible Model Provider] Chat request failed", {
 				modelId: model.id,
 				messageCount: messages.length,
 				error: err instanceof Error ? { name: err.name, message: err.message } : String(err),
+				cause,
 			});
 			logger.error("request.error", {
 				modelId: model.id,
 				messageCount: messages.length,
 				errorName: err instanceof Error ? err.name : String(err),
 				errorMessage: err instanceof Error ? err.message : String(err),
+				errorCause: cause,
 			});
+			if (cause && err instanceof Error) {
+				const detail = cause.code ? `${cause.code}: ${cause.message}` : cause.message;
+				throw new Error(`${err.message} (${detail})`, { cause: err });
+			}
 			throw err;
 		} finally {
 			const durationMs = Date.now() - requestStartTime;
