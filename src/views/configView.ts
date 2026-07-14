@@ -11,7 +11,6 @@ interface RetryPayload {
 
 interface InitPayload {
 	baseUrl: string;
-	apiKey: string;
 	modelName: string;
 	apiMode: HFApiMode;
 	delay: number;
@@ -25,7 +24,6 @@ type IncomingMessage =
 	| {
 			type: "saveConfig";
 			baseUrl: string;
-			apiKey: string;
 			modelName: string;
 			apiMode: string;
 			delay: number;
@@ -38,17 +36,17 @@ type OutgoingMessage = { type: "init"; payload: InitPayload };
 
 /**
  * A minimal configuration webview for the single Agentic Router model this
- * extension exposes. It edits the flat `oaicopilot.*` settings plus the single
- * `oaicopilot.apiKey` secret — there is no provider or multi-model management.
+ * extension exposes. It edits the flat `oaicopilot.*` settings — there is no
+ * provider or multi-model management. The `oaicopilot.apiKey` secret is managed
+ * separately via the "Set OAI Compatible Apikey" command.
  */
 export class ConfigViewPanel {
 	public static currentPanel: ConfigViewPanel | undefined;
 	private readonly panel: vscode.WebviewPanel;
 	private readonly extensionUri: vscode.Uri;
-	private readonly secrets: vscode.SecretStorage;
 	private disposables: vscode.Disposable[] = [];
 
-	public static openPanel(extensionUri: vscode.Uri, secrets: vscode.SecretStorage) {
+	public static openPanel(extensionUri: vscode.Uri) {
 		const column = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined;
 
 		if (ConfigViewPanel.currentPanel) {
@@ -67,13 +65,12 @@ export class ConfigViewPanel {
 			}
 		);
 
-		ConfigViewPanel.currentPanel = new ConfigViewPanel(panel, extensionUri, secrets);
+		ConfigViewPanel.currentPanel = new ConfigViewPanel(panel, extensionUri);
 	}
 
-	private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, secrets: vscode.SecretStorage) {
+	private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
 		this.panel = panel;
 		this.extensionUri = extensionUri;
-		this.secrets = secrets;
 
 		this.update();
 
@@ -132,7 +129,6 @@ export class ConfigViewPanel {
 	private async sendInit() {
 		const config = vscode.workspace.getConfiguration();
 		const baseUrl = config.get<string>("oaicopilot.baseUrl", "");
-		const apiKey = (await this.secrets.get("oaicopilot.apiKey")) ?? "";
 		const modelName = config.get<string>("oaicopilot.modelName", "");
 		const apiMode = normalizeApiMode(config.get<string>("oaicopilot.apiMode", "openai"));
 		const delay = config.get<number>("oaicopilot.delay", 0);
@@ -146,7 +142,6 @@ export class ConfigViewPanel {
 
 		const payload: InitPayload = {
 			baseUrl,
-			apiKey,
 			modelName,
 			apiMode,
 			delay,
@@ -166,13 +161,6 @@ export class ConfigViewPanel {
 		await config.update("oaicopilot.readFileLines", message.readFileLines, vscode.ConfigurationTarget.Global);
 		await config.update("oaicopilot.retry", message.retry, vscode.ConfigurationTarget.Global);
 		await config.update("oaicopilot.commitLanguage", message.commitLanguage, vscode.ConfigurationTarget.Global);
-
-		const apiKey = message.apiKey.trim();
-		if (apiKey) {
-			await this.secrets.store("oaicopilot.apiKey", apiKey);
-		} else {
-			await this.secrets.delete("oaicopilot.apiKey");
-		}
 
 		vscode.window.showInformationMessage("OAICopilot configuration saved.");
 		await this.sendInit();
