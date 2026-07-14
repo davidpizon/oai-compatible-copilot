@@ -32,6 +32,15 @@ job, server-side — not this extension's.
 > here: stop sending the `model` field to the router and remove the `oaicopilot.modelId`
 > setting entirely, exposing the single model under `oaicopilot.modelName` alone.
 
+> **TODO (revisit `apiKey`):** Confirm whether `oaicopilot.apiKey` is still needed at all.
+> When pointed at the Agentic Router proxy, the upstream router discards the credential we
+> send in the `Authorization` header, so the secret buys us nothing in the default setup. It
+> is still used when the extension is pointed directly at a real OpenAI/Anthropic/Gemini/Ollama
+> endpoint (`CommonApi.prepareHeaders`). If we decide the direct-endpoint case is out of scope
+> — or the router grows its own auth — revisit whether the `oaicopilot.apiKey` secret and the
+> "Set OAI Compatible Apikey" command can be removed entirely. (The API Key field was already
+> removed from the configuration webview.)
+
 ## Architecture
 - **Entry**: `src/extension.ts` - registers `HuggingFaceChatModelProvider` under vendor id `oaicopilot`
 - **Core Provider**: `src/provider.ts` - implements `LanguageModelChatProvider` interface
@@ -40,7 +49,7 @@ job, server-side — not this extension's.
 
 ## Key Conventions
 - Uses VS Code proposed API `chatProvider` - types in `src/vscode.proposed.*.d.ts`
-- The single API key is stored via `vscode.SecretStorage` under `oaicopilot.apiKey`
+- The `oaicopilot.apiKey` secret's necessity is under review — see the **TODO (revisit `apiKey`)** in "Single-model design" above
 - The model is configured via `oaicopilot.modelId` / `oaicopilot.modelName` / `oaicopilot.apiMode` (see `src/types.ts` for the internal `HFModelItem`)
 
 ## Code Style (from eslint.config.mjs)

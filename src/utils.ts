@@ -203,6 +203,34 @@ export function tryParseJSONObject(text: string): { ok: true; value: Record<stri
 }
 
 /**
+ * Extract the underlying cause from an error for logging and display.
+ *
+ * Node's global `fetch` (undici) throws `TypeError: fetch failed` and stashes
+ * the real reason (e.g. `ECONNREFUSED`, `ENOTFOUND`, a TLS failure) on
+ * `error.cause`, which the top-level message hides. Dual-stack connection
+ * attempts (IPv4 + IPv6) are wrapped in an `AggregateError`; the first
+ * sub-error carries the actionable code/message. Pure and exported so it can
+ * be unit tested.
+ * @param error The caught error value.
+ * @returns The cause's message and (when present) its `code`, or undefined
+ * when the error has no cause to surface.
+ */
+export function describeErrorCause(error: unknown): { message: string; code?: string } | undefined {
+	if (!(error instanceof Error) || error.cause === undefined || error.cause === null) {
+		return undefined;
+	}
+	let cause: unknown = error.cause;
+	if (cause instanceof AggregateError && cause.errors.length > 0) {
+		cause = cause.errors[0];
+	}
+	if (cause instanceof Error) {
+		const code = (cause as NodeJS.ErrnoException).code;
+		return code ? { message: cause.message, code } : { message: cause.message };
+	}
+	return { message: String(cause) };
+}
+
+/**
  * Create retry configuration from VS Code workspace settings.
  * @returns Retry configuration with default values.
  */
