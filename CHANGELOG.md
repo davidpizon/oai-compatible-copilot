@@ -2,14 +2,19 @@
 
 ## Unreleased
 
+- **Breaking — namespace rename with no compatibility layer.** All extension keys and IDs now use `totallyhot.spark`.
+  - Migration: rename extension settings keys in `settings.json` to the `totallyhot.spark.*` prefix.
+  - Migration: re-enter API key because SecretStorage now uses `totallyhot.spark.apiKey`.
+  - Migration: logs now write to `~/.copilot/totallyhot.spark/logs/`.
+
 - **Breaking — single-model architecture.** The extension now exposes exactly one model to Copilot Chat (the Agentic Router endpoint) and drops all multi-model / multi-provider machinery.
-  - Config: replaced the `oaicopilot.models` array with the flat settings `oaicopilot.modelId`, `oaicopilot.modelName`, and `oaicopilot.apiMode`. The one model is defined by `oaicopilot.baseUrl` + `oaicopilot.modelId` + `oaicopilot.apiMode` and marked default/selectable in the picker.
-  - Removed the "Set OAI Compatible Multi-Provider Apikey" command and the per-provider `oaicopilot.apiKey.{provider}` secrets; a single `oaicopilot.apiKey` secret is used everywhere.
+  - Config: replaced the `totallyhot.spark.models` array with the flat settings `totallyhot.spark.modelId`, `totallyhot.spark.modelName`, and `totallyhot.spark.apiMode`. The one model is defined by `totallyhot.spark.baseUrl` + `totallyhot.spark.modelId` + `totallyhot.spark.apiMode` and marked default/selectable in the picker.
+  - Removed the "Set OAI Compatible Multi-Provider Apikey" command and the per-provider `totallyhot.spark.apiKey.{provider}` secrets; a single `totallyhot.spark.apiKey` secret is used everywhere.
   - Simplified the configuration webview to a single-model settings form (no provider/model CRUD, model-list fetch, or import/export).
   - Git commit generation now uses the single configured model instead of a `useForCommitGeneration` flag.
 - Docs: Removed the "Manage Models...", "Multi-Provider Guide", multi-config, custom-header, per-model-parameter, and other multi-model sections from the README; added a flat Settings Reference. Updated AGENTS.md to describe the single-model design.
-- Feat: Requests now negotiate HTTP/2 (via ALPN) with the configured endpoint when it supports it, transparently falling back to HTTP/1.1 otherwise — no change in behavior, just faster/more efficient transport for HTTP/2-capable endpoints (e.g. a local Agentic Router). Add `oaicopilot.warnOnHttp1` (default `true`) to notify once per host when a connection falls back to HTTP/1.1, and `oaicopilot.allowInsecureTls` (default `false`) to skip TLS certificate verification for `localhost`/`127.0.0.1`/`::1` endpoints only, for local dev proxies using self-signed certificates.
-- **Changed default — `oaicopilot.modelId` now defaults to `agentic-router`** (was empty). A fresh install now exposes a model in the Copilot picker with no configuration and sends `"model": "agentic-router"` upstream. **Migration:** if you relied on the previous empty default to expose *no* model, set `oaicopilot.modelId` to `""` in settings.json. For a router doing normal multi-model routing, set it to a configured route name (e.g. `gpt-5.4`). The field is no longer shown in the configuration UI — edit it in settings.json.
+- Feat: Requests now negotiate HTTP/2 (via ALPN) with the configured endpoint when it supports it, transparently falling back to HTTP/1.1 otherwise — no change in behavior, just faster/more efficient transport for HTTP/2-capable endpoints (e.g. a local Agentic Router). Add `totallyhot.spark.warnOnHttp1` (default `true`) to notify once per host when a connection falls back to HTTP/1.1, and `totallyhot.spark.allowInsecureTls` (default `false`) to skip TLS certificate verification for `localhost`/`127.0.0.1`/`::1` endpoints only, for local dev proxies using self-signed certificates.
+- **Changed default — `totallyhot.spark.modelId` now defaults to `agentic-router`** (was empty). A fresh install now exposes a model in the Copilot picker with no configuration and sends `"model": "agentic-router"` upstream. **Migration:** if you relied on the previous empty default to expose *no* model, set `totallyhot.spark.modelId` to `""` in settings.json. For a router doing normal multi-model routing, set it to a configured route name (e.g. `gpt-5.4`). The field is no longer shown in the configuration UI — edit it in settings.json.
 
 ## 0.4.2 (2026-05-19)
 
@@ -38,7 +43,7 @@ Thanks for your contributing:
 ## 0.3.6 (2026-04-24)
 
 - Feat: Add `xhigh` and `max` reasoning effort options for DeepSeek-V4.
-- Feat: Add structured logging system with `oaicopilot.logLevel` configuration. Logs are written to `~/.copilot/oaicopilot/logs/`. Default is 'off' (no logging).
+- Feat: Add structured logging system with `totallyhot.spark.logLevel` configuration. Logs are written to `~/.copilot/totallyhot.spark/logs/`. Default is 'off' (no logging).
 - Fix: Remove dependency on GitHub Copilot Chat extension.
 
 ## 0.3.5 (2026-04-16)
@@ -69,8 +74,8 @@ Thanks for your contributing:
 
 ## 0.3.2 (2026-03-04)
 
-- Feat: Group models under "OAICopilot" provider with detail labels.
-- Feat: Add configurable commit message system prompt via `oaicopilot.commitSystemPrompt` setting.
+- Feat: Group models under "TotallyHot Spark" provider with detail labels.
+- Feat: Add configurable commit message system prompt via `totallyhot.spark.commitSystemPrompt` setting.
 - Feat: Supports retry when fetch failed.
 - Fix: Handle empty tool call arguments for parameterless tools.
 - Fix: Remove flex layout in config view table to avoid misalignment issues.
@@ -92,7 +97,7 @@ Thanks to:
 
 ## 0.3.0 (2026-01-28)
 
-- Feat: Add configurable `read_file` tool line limit with new `oaicopilot.readFileLines` setting.
+- Feat: Add configurable `read_file` tool line limit with new `totallyhot.spark.readFileLines` setting.
 - Feat: Add config import/export on configuration UI.
 - Doc: Enhance temperature parameter documentation with detailed usage guidelines.
 
@@ -108,7 +113,7 @@ Thanks to:
 
 - Fix: Prevent simultaneous `max_tokens` and `max_completion_tokens` configuration to avoid API conflicts.
 - Feat(openai-responses): Add stateful `previous_response_id` support for conversation continuity.
-- Feat: Add `oaicopilot.commitLanguage` configuration for commit messages. Users can now select from 14 supported languages via the settings interface.
+- Feat: Add `totallyhot.spark.commitLanguage` configuration for commit messages. Users can now select from 14 supported languages via the settings interface.
 
 Thanks to:
   - @matchs for contributing the [PR #118](https://github.com/davidpizon/oai-compatible-copilot/pull/118).
@@ -143,7 +148,7 @@ Thanks to @Andy963 for contributing the [PR #89](https://github.com/davidpizon/o
 - Feat: Add OpenAI Responses API mode (`apiMode: "openai-responses"`, endpoint `/responses`).
 - Feat: Add Gemini native API mode (`apiMode: "gemini"`, endpoint `.../v1beta/models/{model}:streamGenerateContent?alt=sse`).
 - Fix: Preserve Gemini `thoughtSignature` for tool-calling follow-up requests (required by newer Gemini thinking models).
-- Fix: Accept `provider` / `provide` as aliases of `owned_by` in `oaicopilot.models`.
+- Fix: Accept `provider` / `provide` as aliases of `owned_by` in `totallyhot.spark.models`.
 - Fix: Anthropic mode sends `anthropic-version: 2023-06-01` and includes request URL in errors for easier relay debugging.
 
 ## 0.2.0 (2025-12-25)
@@ -156,22 +161,22 @@ Thanks to @Andy963 for contributing the [PR #89](https://github.com/davidpizon/o
 - Feat: [Make top_p optional in request body.](https://github.com/davidpizon/oai-compatible-copilot/issues/81)
 - Feat: [Add Model-specific delay configuration.](https://github.com/davidpizon/oai-compatible-copilot/issues/74)
 - Feat: [Add Model Configuration UI](https://github.com/davidpizon/oai-compatible-copilot/pull/68)
-- Enhanced `oaicopilot.models` configuration including:
-  - `delay`: Model-specific delay in milliseconds between consecutive requests. If not specified, falls back to global `oaicopilot.delay` configuration.
-- New Command `OAICopilot: Open Configuration UI`.
+- Enhanced `totallyhot.spark.models` configuration including:
+  - `delay`: Model-specific delay in milliseconds between consecutive requests. If not specified, falls back to global `totallyhot.spark.delay` configuration.
+- New Command `TotallyHot Spark: Open Configuration UI`.
 
 ## 0.1.8 (2025-12-17)
 
 - Feat: [Add Ollama /api/chat](https://github.com/davidpizon/oai-compatible-copilot/pull/65)
 - Feat: [Add Anthropic /v1/messages](https://github.com/davidpizon/oai-compatible-copilot/issues/60)
-- Enhanced `oaicopilot.models` configuration including:
+- Enhanced `totallyhot.spark.models` configuration including:
   - `apiMode`: API mode: 'openai' (Default) for API (/v1/chat/completions), 'ollama' for API (/api/chat), 'anthropic' for API (/v1/messages).
 
 ## 0.1.7 (2025-12-10)
 
-- Feat: [Expand oaicopilot.retry to handle other type of errors](https://github.com/davidpizon/oai-compatible-copilot/issues/62)
+- Feat: [Expand totallyhot.spark.retry to handle other type of errors](https://github.com/davidpizon/oai-compatible-copilot/issues/62)
 - Fix: [Add buffer for think content](https://github.com/davidpizon/oai-compatible-copilot/pull/61)
-- Add `oaicopilot.retry` configuration including:
+- Add `totallyhot.spark.retry` configuration including:
   > Retry configuration for handling api errors like [429, 500, 502, 503, 504].
   - `status_codes`: Additional HTTP status codes that will be merged. Default is [429, 500, 502, 503, 504].
 
@@ -182,14 +187,14 @@ Thanks to @Andy963 for contributing the [PR #89](https://github.com/davidpizon/o
 ## 0.1.5 (2025-12-05)
 
 - Fix: [Deepseek v3.2 reasoning tool call failed](https://github.com/davidpizon/oai-compatible-copilot/issues/54)
-- Enhanced `oaicopilot.models` configuration including:
+- Enhanced `totallyhot.spark.models` configuration including:
   - `include_reasoning_in_request`: Whether to include reasoning_content in assistant messages sent to the API. Support deepseek-v3.2 or others.
 
 ## 0.1.4 (2025-11-03)
 
 - Feat: [Add headers support](https://github.com/davidpizon/oai-compatible-copilot/pull/31)
 - Feat: [Add displayName option for models in Copilot interface](https://github.com/davidpizon/oai-compatible-copilot/pull/32)
-- Enhanced `oaicopilot.models` configuration including:
+- Enhanced `totallyhot.spark.models` configuration including:
   - `displayName`: Display name for the model that will be shown in the Copilot interface.
   - `headers`: Custom HTTP headers to be sent with every request to this model's provider (e.g., `{"X-API-Version": "v1", "X-Custom-Header": "value"}`).
 
@@ -200,24 +205,24 @@ Thanks to @Andy963 for contributing the [PR #89](https://github.com/davidpizon/o
 ## 0.1.2 (2025-10-29)
 
 - Feat: [add support for extra configuration parameters](https://github.com/davidpizon/oai-compatible-copilot/pull/28)
-- Enhanced `oaicopilot.models` configuration including:
+- Enhanced `totallyhot.spark.models` configuration including:
   - `extra`: Extra request parameters that will be used in /chat/completions.
 
 ## 0.1.1 (2025-10-28)
 
-- Fix: Cannot change apiKey when the `oaicopilot.models` have no baseUrl.
+- Fix: Cannot change apiKey when the `totallyhot.spark.models` have no baseUrl.
 
 ## 0.1.0 (2025-10-28)
 
 - Feat: [Add request delay to prevent 429 Errors](https://github.com/davidpizon/oai-compatible-copilot/issues/24)
 - Fix: [Not Asking for Key when add new provider](https://github.com/davidpizon/oai-compatible-copilot/issues/26)
-- Add `oaicopilot.delay` configuration: Fixed delay in milliseconds between consecutive requests. Default is 0 (no delay).
+- Add `totallyhot.spark.delay` configuration: Fixed delay in milliseconds between consecutive requests. Default is 0 (no delay).
 
 ## 0.0.9 (2025-10-27)
 
 - Feat: [Add Retry Mechanism for Model 429 Errors](https://github.com/davidpizon/oai-compatible-copilot/issues/24)
 - Fix: [Thinking block not end and show in new chat](https://github.com/davidpizon/oai-compatible-copilot/issues/25)
-- Add `oaicopilot.retry` configuration including:
+- Add `totallyhot.spark.retry` configuration including:
   > Retry configuration for handling api errors like [429, 500, 502, 503, 504].
   - `enabled`: Enable retry mechanism for api errors. Default is true.
   - `max_attempts`: Maximum number of retry attempts. Default is 3.
@@ -236,7 +241,7 @@ Thanks to @Andy963 for contributing the [PR #89](https://github.com/davidpizon/o
 ## 0.0.6 (2025-10-10)
 
 - Feat: [OpenAI use `max_completion_tokens` instead of `max_tokens` for GPT-5](https://github.com/davidpizon/oai-compatible-copilot/issues/19)
-- Enhanced `oaicopilot.models` configuration including:
+- Enhanced `totallyhot.spark.models` configuration including:
   - `max_completion_tokens`: Maximum number of tokens to generate (OpenAI new standard parameter)
   - `reasoning_effort`: Reasoning effort level (OpenAI reasoning configuration)
 
@@ -245,7 +250,7 @@ Thanks to @Andy963 for contributing the [PR #89](https://github.com/davidpizon/o
 
 - Feat: [GLM 4.6 - no thinking tags](https://github.com/davidpizon/oai-compatible-copilot/issues/15)
 - Feat: [Multi-config for the same model](https://github.com/davidpizon/oai-compatible-copilot/issues/18)
-- Enhanced `oaicopilot.models` configuration including:
+- Enhanced `totallyhot.spark.models` configuration including:
   - `configId`: Configuration ID for this model. Allows defining the same model with different settings (e.g. 'glm-4.6::thinking', 'glm-4.6::no-thinking')
   - `thinking`: Thinking configuration for Zai provider
     - `type`: Set to 'enabled' to enable thinking, 'disabled' to disable thinking
@@ -266,11 +271,11 @@ Thanks to @Andy963 for contributing the [PR #89](https://github.com/davidpizon/o
 ## 0.0.2 (2025-09-18)
 
 - Deleted settings including:
-  - `oaicopilot.enableThinking`
-  - `oaicopilot.maxTokens`
-  - `oaicopilot.temperature`
-  - `oaicopilot.topP`
-- Enhanced `oaicopilot.models` configuration with support for per-model settings including:
+  - `totallyhot.spark.enableThinking`
+  - `totallyhot.spark.maxTokens`
+  - `totallyhot.spark.temperature`
+  - `totallyhot.spark.topP`
+- Enhanced `totallyhot.spark.models` configuration with support for per-model settings including:
   - `max_tokens`: Maximum number of tokens to generate
   - `enable_thinking`: Switches between thinking and non-thinking modes
   - `temperature`: Sampling temperature (range: [0, 2])
@@ -286,3 +291,4 @@ Thanks to @Andy963 for contributing the [PR #89](https://github.com/davidpizon/o
 ## 0.0.1 (2025-09-16)
 
 - Initial release
+

@@ -39,7 +39,7 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 	private readonly _geminiToolCallMetaByCallId = new Map<string, GeminiToolCallMeta>();
 	private readonly _openaiResponsesPreviousResponseIdUnsupportedBaseUrls = new Set<string>();
 
-	static readonly OPENAI_RESPONSES_STATEFUL_MARKER_MIME = "application/vnd.oaicopilot.stateful-marker";
+	static readonly OPENAI_RESPONSES_STATEFUL_MARKER_MIME = "application/vnd.totallyhot.spark.stateful-marker";
 
 	/**
 	 * Create a provider using the given secret storage for the API key.
@@ -115,13 +115,13 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 				id: model.id,
 				owned_by: "",
 				apiMode: "openai",
-				baseUrl: config.get<string>("oaicopilot.baseUrl", ""),
+				baseUrl: config.get<string>("totallyhot.spark.baseUrl", ""),
 			};
 			// The id the picker reports is the id we send upstream — no config-id suffixes.
 			const baseId = um.id;
 
 			const apiMode = um.apiMode ?? "openai";
-			const baseUrl = um.baseUrl || config.get<string>("oaicopilot.baseUrl", "");
+			const baseUrl = um.baseUrl || config.get<string>("totallyhot.spark.baseUrl", "");
 
 			logger.info("request.start", {
 				modelId: model.id,
@@ -140,7 +140,7 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 
 			// Apply delay between consecutive requests
 			const modelDelay = um?.delay;
-			const globalDelay = config.get<number>("oaicopilot.delay", 0);
+			const globalDelay = config.get<number>("totallyhot.spark.delay", 0);
 			const delayMs = modelDelay !== undefined ? modelDelay : globalDelay;
 
 			if (delayMs > 0 && this._lastRequestTime !== null) {
@@ -309,7 +309,7 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 				// Add prompt_cache_key to enable OpenAI prompt caching.
 				// Without this parameter, cached_tokens is always 0 even with identical requests.
 				if (!requestBody.prompt_cache_key) {
-					requestBody.prompt_cache_key = `oaicopilot-${baseId}`;
+					requestBody.prompt_cache_key = `totallyhot.spark-${baseId}`;
 				}
 				// send Responses API request with retry
 				const url = `${normalizedBaseUrl}/responses`;
@@ -519,7 +519,7 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 	 * Ensure the single API key exists in SecretStorage, prompting the user when missing.
 	 */
 	private async ensureApiKey(): Promise<string | undefined> {
-		let apiKey = await this.secrets.get("oaicopilot.apiKey");
+		let apiKey = await this.secrets.get("totallyhot.spark.apiKey");
 
 		if (!apiKey) {
 			const entered = await vscode.window.showInputBox({
@@ -530,7 +530,7 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 			});
 			if (entered && entered.trim()) {
 				apiKey = entered.trim();
-				await this.secrets.store("oaicopilot.apiKey", apiKey);
+				await this.secrets.store("totallyhot.spark.apiKey", apiKey);
 			}
 		}
 		return apiKey;
@@ -594,3 +594,4 @@ function findLastOpenAIResponsesStatefulMarker(
 	}
 	return null;
 }
+

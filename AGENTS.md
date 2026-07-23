@@ -16,41 +16,41 @@ npm run download-api   # Download VS Code proposed API types (required after vsc
 ## Single-model design
 This extension is **single-model on purpose**. It registers one `LanguageModelChatProvider`
 that exposes exactly one model to Copilot Chat — the Agentic Router (OpenAI-compatible)
-endpoint at `oaicopilot.baseUrl`. There is no multi-model list, no per-provider API keys,
+endpoint at `totallyhot.spark.baseUrl`. There is no multi-model list, no per-provider API keys,
 and no "Manage Models..." flow: the model is defined by the flat settings
-`oaicopilot.modelId` + `oaicopilot.modelName` + `oaicopilot.apiMode`, and authenticated with
-the single `oaicopilot.apiKey` secret. Any backend routing/fan-out is the Agentic Router's
+`totallyhot.spark.modelId` + `totallyhot.spark.modelName` + `totallyhot.spark.apiMode`, and authenticated with
+the single `totallyhot.spark.apiKey` secret. Any backend routing/fan-out is the Agentic Router's
 job, server-side — not this extension's.
 
-> **TODO (revisit `modelId`):** We still send `oaicopilot.modelId` as the request `model`
+> **TODO (revisit `modelId`):** We still send `totallyhot.spark.modelId` as the request `model`
 > field, and require it (a non-empty value drives `resolveSingleModel()` and the picker),
 > because the Agentic Router currently rejects any request without a non-empty `model` even
 > in single-model serving mode (see `RequestInterceptor.ResolveModelRouteAsync` in the
 > agent-as-a-router repo — the non-empty check runs before the forced-model override). If the
 > Agentic Router is changed to no longer require the `model` field (e.g. defaults it
 > server-side when single-model serving is forced), revisit whether `modelId` can be dropped
-> here: stop sending the `model` field to the router and remove the `oaicopilot.modelId`
-> setting entirely, exposing the single model under `oaicopilot.modelName` alone.
+> here: stop sending the `model` field to the router and remove the `totallyhot.spark.modelId`
+> setting entirely, exposing the single model under `totallyhot.spark.modelName` alone.
 
-> **TODO (revisit `apiKey`):** Confirm whether `oaicopilot.apiKey` is still needed at all.
+> **TODO (revisit `apiKey`):** Confirm whether `totallyhot.spark.apiKey` is still needed at all.
 > When pointed at the Agentic Router proxy, the upstream router discards the credential we
 > send in the `Authorization` header, so the secret buys us nothing in the default setup. It
 > is still used when the extension is pointed directly at a real OpenAI/Anthropic/Gemini/Ollama
 > endpoint (`CommonApi.prepareHeaders`). If we decide the direct-endpoint case is out of scope
-> — or the router grows its own auth — revisit whether the `oaicopilot.apiKey` secret and the
+> — or the router grows its own auth — revisit whether the `totallyhot.spark.apiKey` secret and the
 > "Set OAI Compatible Apikey" command can be removed entirely. (The API Key field was already
 > removed from the configuration webview.)
 
 ## Architecture
-- **Entry**: `src/extension.ts` - registers `HuggingFaceChatModelProvider` under vendor id `oaicopilot`
+- **Entry**: `src/extension.ts` - registers `HuggingFaceChatModelProvider` under vendor id `totallyhot.spark`
 - **Core Provider**: `src/provider.ts` - implements `LanguageModelChatProvider` interface
 - **Single model resolution**: `src/provideModel.ts` - `resolveSingleModel()` builds the one model from settings; `prepareLanguageModelChatInformation()` returns a 0- or 1-element list
-- **API Modes**: `src/openai/`, `src/ollama/`, `src/anthropic/`, `src/gemini/` - the one model can speak any of these protocols via `oaicopilot.apiMode`
+- **API Modes**: `src/openai/`, `src/ollama/`, `src/anthropic/`, `src/gemini/` - the one model can speak any of these protocols via `totallyhot.spark.apiMode`
 
 ## Key Conventions
 - Uses VS Code proposed API `chatProvider` - types in `src/vscode.proposed.*.d.ts`
-- The `oaicopilot.apiKey` secret's necessity is under review — see the **TODO (revisit `apiKey`)** in "Single-model design" above
-- The model is configured via `oaicopilot.modelId` / `oaicopilot.modelName` / `oaicopilot.apiMode` (see `src/types.ts` for the internal `HFModelItem`)
+- The `totallyhot.spark.apiKey` secret's necessity is under review — see the **TODO (revisit `apiKey`)** in "Single-model design" above
+- The model is configured via `totallyhot.spark.modelId` / `totallyhot.spark.modelName` / `totallyhot.spark.apiMode` (see `src/types.ts` for the internal `HFModelItem`)
 
 ## Code Style (from eslint.config.mjs)
 - Semicolons required (`@stylistic/semi`)
@@ -58,3 +58,4 @@ job, server-side — not this extension's.
 - Unused vars with `_` prefix are ignored
 - Use `\t` indentation (`@stylistic/indent`)
 - Double quotes for strings (`@stylistic/quotes`)
+

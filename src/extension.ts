@@ -16,12 +16,12 @@ export function activate(context: vscode.ExtensionContext) {
 	const tokenCountStatusBarItem: vscode.StatusBarItem = initStatusBar(context);
 	const provider = new HuggingFaceChatModelProvider(context.secrets, tokenCountStatusBarItem);
 	// Register the Hugging Face provider under the vendor id used in package.json
-	vscode.lm.registerLanguageModelChatProvider("oaicopilot", provider);
+	vscode.lm.registerLanguageModelChatProvider("totallyhot.spark", provider);
 
 	// Management command to configure API key
 	context.subscriptions.push(
-		vscode.commands.registerCommand("oaicopilot.setApikey", async () => {
-			const existing = await context.secrets.get("oaicopilot.apiKey");
+		vscode.commands.registerCommand("totallyhot.spark.setApikey", async () => {
+			const existing = await context.secrets.get("totallyhot.spark.apiKey");
 			const apiKey = await vscode.window.showInputBox({
 				title: "OAI Compatible Provider API Key",
 				prompt: existing ? "Update your OAI Compatible API key" : "Enter your OAI Compatible API key",
@@ -33,27 +33,27 @@ export function activate(context: vscode.ExtensionContext) {
 				return; // user canceled
 			}
 			if (!apiKey.trim()) {
-				await context.secrets.delete("oaicopilot.apiKey");
+				await context.secrets.delete("totallyhot.spark.apiKey");
 				vscode.window.showInformationMessage("OAI Compatible API key cleared.");
 				return;
 			}
-			await context.secrets.store("oaicopilot.apiKey", apiKey.trim());
+			await context.secrets.store("totallyhot.spark.apiKey", apiKey.trim());
 			vscode.window.showInformationMessage("OAI Compatible API key saved.");
 		})
 	);
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand("oaicopilot.openConfig", async () => {
+		vscode.commands.registerCommand("totallyhot.spark.openConfig", async () => {
 			ConfigViewPanel.openPanel(context.extensionUri);
 		})
 	);
 
 	// Register the generateGitCommitMessage command handler
 	context.subscriptions.push(
-		vscode.commands.registerCommand("oaicopilot.generateGitCommitMessage", async (scm) => {
+		vscode.commands.registerCommand("totallyhot.spark.generateGitCommitMessage", async (scm) => {
 			generateCommitMsg(context.secrets, scm);
 		}),
-		vscode.commands.registerCommand("oaicopilot.abortGitCommitMessage", () => {
+		vscode.commands.registerCommand("totallyhot.spark.abortGitCommitMessage", () => {
 			abortCommitGeneration();
 		})
 	);
@@ -61,7 +61,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// Watch for logLevel configuration changes
 	context.subscriptions.push(
 		vscode.workspace.onDidChangeConfiguration((e) => {
-			if (e.affectsConfiguration("oaicopilot.logLevel")) {
+			if (e.affectsConfiguration("totallyhot.spark.logLevel")) {
 				logger.reloadConfig();
 			}
 		})
@@ -69,3 +69,4 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {}
+

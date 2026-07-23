@@ -147,11 +147,11 @@ async function performCommitMsgGeneration(secrets: vscode.SecretStorage, gitDiff
 	const startTime = Date.now();
 	let modelId: string | undefined;
 	try {
-		vscode.commands.executeCommand("setContext", "oaicopilot.isGeneratingCommit", true);
+		vscode.commands.executeCommand("setContext", "totallyhot.spark.isGeneratingCommit", true);
 		const config = vscode.workspace.getConfiguration();
 
 		// Get custom prompts or use defaults
-		const customSystemPrompt = config.get<string>("oaicopilot.commitMessagePrompt", "");
+		const customSystemPrompt = config.get<string>("totallyhot.spark.commitMessagePrompt", "");
 		const PROMPT = {
 			system: customSystemPrompt || DEFAULT_PROMPT.system,
 			user: DEFAULT_PROMPT.user,
@@ -172,7 +172,7 @@ async function performCommitMsgGeneration(secrets: vscode.SecretStorage, gitDiff
 		// Use the single configured model (baseUrl + modelId + apiMode).
 		const selectedModel = resolveSingleModel(config);
 		if (!selectedModel) {
-			throw new Error("No model configured. Please set 'oaicopilot.modelId' in your settings.");
+			throw new Error("No model configured. Please set 'totallyhot.spark.modelId' in your settings.");
 		}
 		modelId = selectedModel.id;
 		logger.info("commit.start", { modelId });
@@ -184,13 +184,13 @@ async function performCommitMsgGeneration(secrets: vscode.SecretStorage, gitDiff
 		}
 
 		// Get base URL for the model
-		const baseUrl = selectedModel.baseUrl || config.get<string>("oaicopilot.baseUrl", "");
+		const baseUrl = selectedModel.baseUrl || config.get<string>("totallyhot.spark.baseUrl", "");
 		if (!baseUrl || !baseUrl.startsWith("http")) {
 			throw new Error(`Invalid base URL configuration.`);
 		}
 
 		// Get commit language configuration
-		const commitLanguage = config.get<string>("oaicopilot.commitLanguage", "English");
+		const commitLanguage = config.get<string>("totallyhot.spark.commitLanguage", "English");
 
 		// Create a system prompt with language instruction
 		const systemPrompt = PROMPT.system + ` Generate commit message in ${commitLanguage}.`;
@@ -237,13 +237,13 @@ async function performCommitMsgGeneration(secrets: vscode.SecretStorage, gitDiff
 		logger.error("commit.error", { modelId: modelId ?? "unknown", error: errorMessage });
 		vscode.window.showErrorMessage(`Failed to generate commit message: ${errorMessage}`);
 	} finally {
-		vscode.commands.executeCommand("setContext", "oaicopilot.isGeneratingCommit", false);
+		vscode.commands.executeCommand("setContext", "totallyhot.spark.isGeneratingCommit", false);
 	}
 }
 
 export function abortCommitGeneration() {
 	commitGenerationAbortController?.abort();
-	vscode.commands.executeCommand("setContext", "oaicopilot.isGeneratingCommit", false);
+	vscode.commands.executeCommand("setContext", "totallyhot.spark.isGeneratingCommit", false);
 }
 
 /**
@@ -268,5 +268,6 @@ function removeThinkTags(text: string): string {
  * Ensure the single API key exists in SecretStorage.
  */
 async function ensureApiKey(secrets: vscode.SecretStorage): Promise<string | undefined> {
-	return secrets.get("oaicopilot.apiKey");
+	return secrets.get("totallyhot.spark.apiKey");
 }
+

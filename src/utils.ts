@@ -236,7 +236,7 @@ export function describeErrorCause(error: unknown): { message: string; code?: st
  */
 export function createRetryConfig(): RetryConfig {
 	const config = vscode.workspace.getConfiguration();
-	const retryConfig = config.get<RetryConfig>("oaicopilot.retry", {
+	const retryConfig = config.get<RetryConfig>("totallyhot.spark.retry", {
 		enabled: true,
 		max_attempts: RETRY_MAX_ATTEMPTS,
 		interval_ms: RETRY_INTERVAL_MS,
@@ -314,3 +314,4 @@ export async function executeWithRetry<T>(fn: () => Promise<T>, retryConfig: Ret
 	});
 	throw lastError || new Error("Retry failed");
 }
+

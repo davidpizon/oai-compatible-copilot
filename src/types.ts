@@ -84,7 +84,7 @@ export interface HFModelItem {
 
 	/**
 	 * Model-specific delay in milliseconds between consecutive requests.
-	 * If not specified, falls back to global `oaicopilot.delay` configuration.
+	 * If not specified, falls back to global `totallyhot.spark.delay` configuration.
 	 */
 	delay?: number;
 
@@ -178,3 +178,4 @@ export interface TokenUsage {
 	total_tokens: number;
 	prompt_tokens_details?: TokenUsageDetails;
 }
+

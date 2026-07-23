@@ -58,13 +58,13 @@ suite("modelConfiguration", () => {
 
 	test("exposes exactly one model built from the flat settings", async () => {
 		const config = vscode.workspace.getConfiguration();
-		const previousModelId = config.get<unknown>("oaicopilot.modelId", "");
-		const previousModelName = config.get<unknown>("oaicopilot.modelName", "");
+		const previousModelId = config.get<unknown>("totallyhot.spark.modelId", "");
+		const previousModelName = config.get<unknown>("totallyhot.spark.modelName", "");
 		const cts = new vscode.CancellationTokenSource();
 
 		try {
-			await config.update("oaicopilot.modelId", "glm-4.6", vscode.ConfigurationTarget.Global);
-			await config.update("oaicopilot.modelName", "Agentic Router", vscode.ConfigurationTarget.Global);
+			await config.update("totallyhot.spark.modelId", "glm-4.6", vscode.ConfigurationTarget.Global);
+			await config.update("totallyhot.spark.modelName", "Agentic Router", vscode.ConfigurationTarget.Global);
 
 			const infos = await prepareLanguageModelChatInformation({ silent: true }, cts.token, {} as vscode.SecretStorage);
 
@@ -78,24 +78,24 @@ suite("modelConfiguration", () => {
 			assert.strictEqual(info.configurationSchema, undefined);
 		} finally {
 			cts.dispose();
-			await config.update("oaicopilot.modelId", previousModelId, vscode.ConfigurationTarget.Global);
-			await config.update("oaicopilot.modelName", previousModelName, vscode.ConfigurationTarget.Global);
+			await config.update("totallyhot.spark.modelId", previousModelId, vscode.ConfigurationTarget.Global);
+			await config.update("totallyhot.spark.modelName", previousModelName, vscode.ConfigurationTarget.Global);
 		}
 	});
 
 	test("exposes no model when the model id is empty", async () => {
 		const config = vscode.workspace.getConfiguration();
-		const previousModelId = config.get<unknown>("oaicopilot.modelId", "");
+		const previousModelId = config.get<unknown>("totallyhot.spark.modelId", "");
 		const cts = new vscode.CancellationTokenSource();
 
 		try {
-			await config.update("oaicopilot.modelId", "", vscode.ConfigurationTarget.Global);
+			await config.update("totallyhot.spark.modelId", "", vscode.ConfigurationTarget.Global);
 
 			const infos = await prepareLanguageModelChatInformation({ silent: true }, cts.token, {} as vscode.SecretStorage);
 			assert.strictEqual(infos.length, 0);
 		} finally {
 			cts.dispose();
-			await config.update("oaicopilot.modelId", previousModelId, vscode.ConfigurationTarget.Global);
+			await config.update("totallyhot.spark.modelId", previousModelId, vscode.ConfigurationTarget.Global);
 		}
 	});
 
@@ -155,3 +155,4 @@ suite("modelConfiguration", () => {
 		assert.strictEqual(geminiBody.thinkingConfig, undefined);
 	});
 });
+
