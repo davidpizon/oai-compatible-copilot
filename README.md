@@ -37,7 +37,7 @@ The extension itself doesn't implement routing logic — that's AgenticRouter's 
 
 Setup means giving the extension a connection string (`baseUrl`) to [AgenticRouter](https://github.com/davidpizon/agent-as-a-router)'s local proxy.
 
-1. Install the OAI Compatible Provider for Copilot extension [here](https://marketplace.visualstudio.com/items?itemName=davidpizon.oai-compatible-copilot).
+1. Install the TotallyHot Spark extension [here](https://marketplace.visualstudio.com/items?itemName=davidpizon.totallyhot-spark).
 2. Open VS Code Settings and set `totallyhot.spark.baseUrl`, `totallyhot.spark.modelId`, and (if needed) `totallyhot.spark.apiMode`.
 3. Open GitHub Copilot Chat and pick the model from the model picker — the single configured model is selected by default.
 

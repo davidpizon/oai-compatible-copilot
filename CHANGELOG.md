@@ -9,7 +9,7 @@
 
 - **Breaking — single-model architecture.** The extension now exposes exactly one model to Copilot Chat (the Agentic Router endpoint) and drops all multi-model / multi-provider machinery.
   - Config: replaced the `totallyhot.spark.models` array with the flat settings `totallyhot.spark.modelId`, `totallyhot.spark.modelName`, and `totallyhot.spark.apiMode`. The one model is defined by `totallyhot.spark.baseUrl` + `totallyhot.spark.modelId` + `totallyhot.spark.apiMode` and marked default/selectable in the picker.
-  - Removed the "Set OAI Compatible Multi-Provider Apikey" command and the per-provider `totallyhot.spark.apiKey.{provider}` secrets; a single `totallyhot.spark.apiKey` secret is used everywhere.
+  - Removed the "Set OAI Compatible Multi-Provider Apikey" command and the per-provider `totallyhot.spark.apiKey.{provider}` secrets (the single `totallyhot.spark.apiKey` secret that briefly replaced them has since been removed as well — see the API-key removal note above).
   - Simplified the configuration webview to a single-model settings form (no provider/model CRUD, model-list fetch, or import/export).
   - Git commit generation now uses the single configured model instead of a `useForCommitGeneration` flag.
 - Docs: Removed the "Manage Models...", "Multi-Provider Guide", multi-config, custom-header, per-model-parameter, and other multi-model sections from the README; added a flat Settings Reference. Updated AGENTS.md to describe the single-model design.

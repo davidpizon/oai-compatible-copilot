@@ -47,7 +47,7 @@ the Agentic Router's job.
 
 ## Key Conventions
 - Uses VS Code proposed API `chatProvider` - types in `src/vscode.proposed.*.d.ts`
-- The `totallyhot.spark.apiKey` secret's necessity is under review — see the **TODO (revisit `apiKey`)** in "Single-model design" above
+- The `totallyhot.spark.apiKey` secret has been removed — see **Removed `apiKey`** in "Single-model design" above; requests carry no credential from this extension
 - The model is configured via `totallyhot.spark.modelId` / `totallyhot.spark.modelName` / `totallyhot.spark.apiMode` (see `src/types.ts` for the internal `HFModelItem`)
 
 ## Code Style (from eslint.config.mjs)

@@ -51,7 +51,7 @@
 		"languageModelChatProviders": [
 			{
 				"vendor": "totallyhot.spark",
-				"displayName": "OAI Compatible"
+				"displayName": "TotallyHot Spark"
 			}
 		],
 		"commands": [
@@ -98,7 +98,7 @@
 			]
 		},
 		"configuration": {
-			"title": "OAI Compatible Copilot",
+			"title": "TotallyHot Spark",
 			"properties": {
 				"totallyhot.spark.logLevel": {
 					"type": "string",
