@@ -240,7 +240,7 @@
 	},
 	"dependencies": {
 		"@microsoft/tiktokenizer": "^1.0.10",
-		"undici": "^6.27.0"
+		"undici": "^8.7.0"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
@@ -254,7 +254,7 @@
 		"eslint": "^10.7.0",
 		"prettier": "^3.9.5",
 		"typescript": "^7.0.2",
-		"typescript-eslint": "^8.63.0"
+		"typescript-eslint": "^8.64.0"
 	},
 	"overrides": {
 		"serialize-javascript": "^7.0.5"
