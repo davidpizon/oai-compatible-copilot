@@ -283,8 +283,7 @@ export class OllamaApi extends CommonApi<OllamaMessage, OllamaRequestBody> {
 		model: HFModelItem,
 		systemPrompt: string,
 		messages: { role: string; content: string }[],
-		baseUrl: string,
-		apiKey: string
+		baseUrl: string
 	): AsyncGenerator<{ type: "text"; text: string }> {
 		// Convert to Ollama message format
 		const ollamaMessages: OllamaMessage[] = [];
@@ -309,7 +308,7 @@ export class OllamaApi extends CommonApi<OllamaMessage, OllamaRequestBody> {
 
 		requestBody = this.prepareRequestBody(requestBody, model, undefined);
 
-		const headers = CommonApi.prepareHeaders(apiKey, model.apiMode ?? "ollama", model.headers);
+		const headers = CommonApi.prepareHeaders(model.apiMode ?? "ollama", model.headers);
 
 		const url = `${baseUrl.replace(/\/+$/, "")}/api/chat`;
 

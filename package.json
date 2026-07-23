@@ -1,7 +1,7 @@
 {
-	"name": "oai-compatible-copilot",
+	"name": "totallyhot-spark",
 	"publisher": "davidpizon",
-	"displayName": "Agentic Router Provider for Copilot",
+	"displayName": "TotallyHot Spark",
 	"description": "The connective adapter that bridges GitHub Copilot Chat with an Agentic Router.",
 	"icon": "assets/logo.png",
 	"keywords": [
@@ -51,16 +51,10 @@
 		"languageModelChatProviders": [
 			{
 				"vendor": "totallyhot.spark",
-				"displayName": "OAI Compatible",
-				"managementCommand": "totallyhot.spark.setApikey"
+				"displayName": "OAI Compatible"
 			}
 		],
 		"commands": [
-			{
-				"command": "totallyhot.spark.setApikey",
-				"category": "TotallyHot Spark",
-				"title": "Set OAI Compatible Apikey"
-			},
 			{
 				"command": "totallyhot.spark.openConfig",
 				"category": "TotallyHot Spark",

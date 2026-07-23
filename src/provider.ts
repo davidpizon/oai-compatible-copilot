@@ -41,14 +41,7 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 
 	static readonly OPENAI_RESPONSES_STATEFUL_MARKER_MIME = "application/vnd.totallyhot.spark.stateful-marker";
 
-	/**
-	 * Create a provider using the given secret storage for the API key.
-	 * @param secrets VS Code secret storage.
-	 */
-	constructor(
-		private readonly secrets: vscode.SecretStorage,
-		private readonly statusBarItem: vscode.StatusBarItem
-	) {}
+	constructor(private readonly statusBarItem: vscode.StatusBarItem) {}
 
 	/**
 	 * Get the list of available language models contributed by this provider
@@ -60,7 +53,7 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 		options: { silent: boolean },
 		_token: CancellationToken
 	): Promise<LanguageModelChatInformation[]> {
-		return prepareLanguageModelChatInformation({ silent: options.silent ?? false }, _token, this.secrets);
+		return prepareLanguageModelChatInformation({ silent: options.silent ?? false }, _token);
 	}
 
 	/**
@@ -161,13 +154,6 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 				}
 			}
 
-			// Get the single API key for the configured endpoint.
-			const modelApiKey = await this.ensureApiKey();
-			if (!modelApiKey) {
-				logger.warn("apiKey.missing", {});
-				throw new Error("OAI Compatible API key not found");
-			}
-
 			// send chat request
 			const BASE_URL = baseUrl;
 			if (!BASE_URL || !BASE_URL.startsWith("http")) {
@@ -178,7 +164,7 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 			const retryConfig = createRetryConfig();
 
 			// prepare headers with custom headers if specified
-			const requestHeaders = CommonApi.prepareHeaders(modelApiKey, apiMode, um?.headers);
+			const requestHeaders = CommonApi.prepareHeaders(apiMode, um?.headers);
 			logger.debug("request.headers", {
 				headers: logger.sanitizeHeaders(requestHeaders as Record<string, string>),
 			});
@@ -513,27 +499,6 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 			// Update last request time after successful completion
 			this._lastRequestTime = Date.now();
 		}
-	}
-
-	/**
-	 * Ensure the single API key exists in SecretStorage, prompting the user when missing.
-	 */
-	private async ensureApiKey(): Promise<string | undefined> {
-		let apiKey = await this.secrets.get("totallyhot.spark.apiKey");
-
-		if (!apiKey) {
-			const entered = await vscode.window.showInputBox({
-				title: "OAI Compatible API Key",
-				prompt: "Enter your OAI Compatible API key",
-				ignoreFocusOut: true,
-				password: true,
-			});
-			if (entered && entered.trim()) {
-				apiKey = entered.trim();
-				await this.secrets.store("totallyhot.spark.apiKey", apiKey);
-			}
-		}
-		return apiKey;
 	}
 }
 

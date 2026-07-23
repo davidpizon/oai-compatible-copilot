@@ -51,8 +51,7 @@ export function resolveSingleModel(
  */
 export async function prepareLanguageModelChatInformation(
 	_options: { silent: boolean },
-	_token: CancellationToken,
-	_secrets: vscode.SecretStorage
+	_token: CancellationToken
 ): Promise<LanguageModelChatInformation[]> {
 	const config = vscode.workspace.getConfiguration();
 	const model = resolveSingleModel(config);

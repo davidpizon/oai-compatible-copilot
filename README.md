@@ -39,8 +39,7 @@ Setup means giving the extension a connection string (`baseUrl`) to [AgenticRout
 
 1. Install the OAI Compatible Provider for Copilot extension [here](https://marketplace.visualstudio.com/items?itemName=davidpizon.oai-compatible-copilot).
 2. Open VS Code Settings and set `totallyhot.spark.baseUrl`, `totallyhot.spark.modelId`, and (if needed) `totallyhot.spark.apiMode`.
-3. Run "TotallyHot Spark: Set OAI Compatible Apikey" from the Command Palette to store your API key.
-4. Open GitHub Copilot Chat and pick the model from the model picker — the single configured model is selected by default.
+3. Open GitHub Copilot Chat and pick the model from the model picker — the single configured model is selected by default.
 
 ## Migration Notes
 
@@ -49,8 +48,7 @@ This release includes a hard key-namespace rename to `totallyhot.spark` with no 
 Required actions:
 
 1. Rename every extension settings key to the `totallyhot.spark.*` prefix in your `settings.json`.
-2. Re-enter your API key via "TotallyHot Spark: Set OAI Compatible Apikey" because SecretStorage now uses `totallyhot.spark.apiKey`.
-3. If you use log files, check the new path `~/.copilot/totallyhot.spark/logs/`.
+2. If you use log files, check the new path `~/.copilot/totallyhot.spark/logs/`.
 
 ### Settings Example
 
@@ -77,25 +75,25 @@ There are two ways to open the configuration interface:
 2. **From the Status Bar**:
    - Click on the "TotallyHot Spark" status bar item in the bottom-right corner of VS Code
 
-The panel edits the same flat settings described below (base URL, API key, model id, display name, API mode) plus retry, delay, and commit-language options. Save writes them to your global settings and stores the API key in VS Code SecretStorage.
+The panel edits the same flat settings described below (base URL, model id, display name, API mode) plus retry, delay, and commit-language options. Save writes them to your global settings.
 
 ## ✨ API Mode
 
 The single model can speak five different API protocols. Choose which one to use with the top-level `totallyhot.spark.apiMode` setting.
 
-| `apiMode` | Endpoint | Auth header | Use for |
-|---|---|---|---|
-| `openai` (default) | `/chat/completions` | `Authorization: Bearer <apiKey>` | Most OpenAI-compatible endpoints (AgenticRouter, ModelScope, SiliconFlow, ...) |
-| `openai-responses` | `/responses` | `Authorization: Bearer <apiKey>` | OpenAI Responses API and compatible gateways |
-| `ollama` | `/api/chat` | `Authorization: Bearer <apiKey>` (optional for local Ollama) | Local Ollama instances |
-| `anthropic` | `/v1/messages` | `x-api-key: <apiKey>` | Anthropic Claude endpoints |
-| `gemini` | `/v1beta/models/{model}:streamGenerateContent?alt=sse` | `x-goog-api-key: <apiKey>` | Google Gemini endpoints |
+| `apiMode` | Endpoint | Use for |
+|---|---|---|
+| `openai` (default) | `/chat/completions` | Most OpenAI-compatible endpoints (AgenticRouter, ModelScope, SiliconFlow, ...) |
+| `openai-responses` | `/responses` | OpenAI Responses API and compatible gateways |
+| `ollama` | `/api/chat` | Local Ollama instances |
+| `anthropic` | `/v1/messages` | Anthropic Claude endpoints |
+| `gemini` | `/v1beta/models/{model}:streamGenerateContent?alt=sse` | Google Gemini endpoints |
 
-Each API mode uses different message-conversion logic internally to match the provider-specific request/response format (tools, images, thinking). When using `ollama` mode you can omit the API key (defaults to `ollama`).
+Each API mode uses different message-conversion logic internally to match the provider-specific request/response format (tools, images, thinking). No API key or auth header is sent by the extension — authenticate at the endpoint itself (e.g. the Agentic Router proxy) if needed.
 
 ## Settings Reference
 
-The extension is configured entirely through flat `totallyhot.spark.*` settings — there is a single model and a single API key.
+The extension is configured entirely through flat `totallyhot.spark.*` settings — there is a single model.
 
 | Setting | Type | Description |
 |---|---|---|
@@ -103,7 +101,6 @@ The extension is configured entirely through flat `totallyhot.spark.*` settings 
 | `totallyhot.spark.modelId` | string | The model id sent (as the `model` field) upstream and shown in the Copilot model picker. Defaults to `agentic-router`. Set to a configured route name (e.g. `gpt-5.4`) for normal multi-model routing; empty exposes no model. Edit via `settings.json` — not shown in the configuration UI. |
 | `totallyhot.spark.modelName` | string | (Optional) Display name shown in the picker. Defaults to the model id. |
 | `totallyhot.spark.apiMode` | enum | Protocol used to talk to the endpoint (see [API Mode](#-api-mode)). Default `openai`. |
-| `totallyhot.spark.apiKey` | secret | Stored via the "TotallyHot Spark: Set OAI Compatible Apikey" command or the config UI (not a settings.json key). |
 | `totallyhot.spark.allowInsecureTls` | boolean | Skip TLS certificate verification — only for `localhost`/`127.0.0.1`/`::1` endpoints (e.g. a local dev proxy with a self-signed cert). Never applied to remote hosts. Default `false`. |
 | `totallyhot.spark.warnOnHttp1` | boolean | Warn (once per host, via a notification + log) when a request connects over HTTP/1.1 instead of negotiating HTTP/2. Requests work either way — HTTP/2 is opportunistic. Default `true`. |
 | `totallyhot.spark.retry` | object | Retry behavior for API errors (`enabled`, `max_attempts`, `interval_ms`, `status_codes`). |

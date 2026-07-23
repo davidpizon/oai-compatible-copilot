@@ -489,8 +489,7 @@ export class OpenaiApi extends CommonApi<OpenAIChatMessage, Record<string, unkno
 		model: HFModelItem,
 		systemPrompt: string,
 		messages: { role: string; content: string }[],
-		baseUrl: string,
-		apiKey: string
+		baseUrl: string
 	): AsyncGenerator<{ type: "text"; text: string }> {
 		// Combine system prompt with first user message or as separate system message
 		const openaiMessages = [...messages];
@@ -505,7 +504,7 @@ export class OpenaiApi extends CommonApi<OpenAIChatMessage, Record<string, unkno
 		};
 		requestBody = this.prepareRequestBody(requestBody, model, undefined);
 
-		const headers = CommonApi.prepareHeaders(apiKey, model.apiMode ?? "openai", model.headers);
+		const headers = CommonApi.prepareHeaders(model.apiMode ?? "openai", model.headers);
 
 		const url = `${baseUrl.replace(/\/+$/, "")}/chat/completions`;
 

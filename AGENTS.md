@@ -18,9 +18,10 @@ This extension is **single-model on purpose**. It registers one `LanguageModelCh
 that exposes exactly one model to Copilot Chat — the Agentic Router (OpenAI-compatible)
 endpoint at `totallyhot.spark.baseUrl`. There is no multi-model list, no per-provider API keys,
 and no "Manage Models..." flow: the model is defined by the flat settings
-`totallyhot.spark.modelId` + `totallyhot.spark.modelName` + `totallyhot.spark.apiMode`, and authenticated with
-the single `totallyhot.spark.apiKey` secret. Any backend routing/fan-out is the Agentic Router's
-job, server-side — not this extension's.
+`totallyhot.spark.modelId` + `totallyhot.spark.modelName` + `totallyhot.spark.apiMode`. Requests
+are sent with no auth header — any credential the upstream endpoint needs is the Agentic
+Router's concern, server-side, not this extension's. Any backend routing/fan-out is likewise
+the Agentic Router's job.
 
 > **TODO (revisit `modelId`):** We still send `totallyhot.spark.modelId` as the request `model`
 > field, and require it (a non-empty value drives `resolveSingleModel()` and the picker),
@@ -32,14 +33,11 @@ job, server-side — not this extension's.
 > here: stop sending the `model` field to the router and remove the `totallyhot.spark.modelId`
 > setting entirely, exposing the single model under `totallyhot.spark.modelName` alone.
 
-> **TODO (revisit `apiKey`):** Confirm whether `totallyhot.spark.apiKey` is still needed at all.
-> When pointed at the Agentic Router proxy, the upstream router discards the credential we
-> send in the `Authorization` header, so the secret buys us nothing in the default setup. It
-> is still used when the extension is pointed directly at a real OpenAI/Anthropic/Gemini/Ollama
-> endpoint (`CommonApi.prepareHeaders`). If we decide the direct-endpoint case is out of scope
-> — or the router grows its own auth — revisit whether the `totallyhot.spark.apiKey` secret and the
-> "Set OAI Compatible Apikey" command can be removed entirely. (The API Key field was already
-> removed from the configuration webview.)
+> **Removed `apiKey`:** The `totallyhot.spark.apiKey` secret, the "Set OAI Compatible Apikey"
+> command, and `CommonApi.prepareHeaders`'s auth-header logic (`Authorization`/`x-api-key`/
+> `x-goog-api-key`) have been removed. Requests to any endpoint — including a direct (non-router)
+> OpenAI/Anthropic/Gemini/Ollama endpoint — now go out with no credential from this extension.
+> If direct-endpoint auth is needed again in the future, it will need to be reintroduced.
 
 ## Architecture
 - **Entry**: `src/extension.ts` - registers `HuggingFaceChatModelProvider` under vendor id `totallyhot.spark`

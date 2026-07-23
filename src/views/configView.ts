@@ -37,8 +37,8 @@ type OutgoingMessage = { type: "init"; payload: InitPayload };
 /**
  * A minimal configuration webview for the single Agentic Router model this
  * extension exposes. It edits the flat `totallyhot.spark.*` settings — there is no
- * provider or multi-model management. The `totallyhot.spark.apiKey` secret is managed
- * separately via the "Set OAI Compatible Apikey" command.
+ * provider or multi-model management, and no API key to configure (requests are
+ * sent without an auth header).
  */
 export class ConfigViewPanel {
 	public static currentPanel: ConfigViewPanel | undefined;

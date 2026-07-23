@@ -66,7 +66,7 @@ suite("modelConfiguration", () => {
 			await config.update("totallyhot.spark.modelId", "glm-4.6", vscode.ConfigurationTarget.Global);
 			await config.update("totallyhot.spark.modelName", "Agentic Router", vscode.ConfigurationTarget.Global);
 
-			const infos = await prepareLanguageModelChatInformation({ silent: true }, cts.token, {} as vscode.SecretStorage);
+			const infos = await prepareLanguageModelChatInformation({ silent: true }, cts.token);
 
 			assert.strictEqual(infos.length, 1, "exactly one model should be exposed");
 			const info = infos[0] as ModelPickerChatInformation;
@@ -91,7 +91,7 @@ suite("modelConfiguration", () => {
 		try {
 			await config.update("totallyhot.spark.modelId", "", vscode.ConfigurationTarget.Global);
 
-			const infos = await prepareLanguageModelChatInformation({ silent: true }, cts.token, {} as vscode.SecretStorage);
+			const infos = await prepareLanguageModelChatInformation({ silent: true }, cts.token);
 			assert.strictEqual(infos.length, 0);
 		} finally {
 			cts.dispose();

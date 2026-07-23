@@ -2,9 +2,9 @@
 
 ## Unreleased
 
+- **Breaking — removed the API key entirely.** The `totallyhot.spark.apiKey` secret, the "Set OAI Compatible Apikey" command, and its `managementCommand` link in the Copilot model picker have all been removed. Requests no longer send any `Authorization`/`x-api-key`/`x-goog-api-key` header for any `apiMode`, including direct (non-router) OpenAI/Anthropic/Gemini/Ollama endpoints.
 - **Breaking — namespace rename with no compatibility layer.** All extension keys and IDs now use `totallyhot.spark`.
   - Migration: rename extension settings keys in `settings.json` to the `totallyhot.spark.*` prefix.
-  - Migration: re-enter API key because SecretStorage now uses `totallyhot.spark.apiKey`.
   - Migration: logs now write to `~/.copilot/totallyhot.spark/logs/`.
 
 - **Breaking — single-model architecture.** The extension now exposes exactly one model to Copilot Chat (the Agentic Router endpoint) and drops all multi-model / multi-provider machinery.

@@ -14,33 +14,9 @@ export function activate(context: vscode.ExtensionContext) {
 	TokenizerManager.initialize(context.extensionPath);
 
 	const tokenCountStatusBarItem: vscode.StatusBarItem = initStatusBar(context);
-	const provider = new HuggingFaceChatModelProvider(context.secrets, tokenCountStatusBarItem);
+	const provider = new HuggingFaceChatModelProvider(tokenCountStatusBarItem);
 	// Register the Hugging Face provider under the vendor id used in package.json
 	vscode.lm.registerLanguageModelChatProvider("totallyhot.spark", provider);
-
-	// Management command to configure API key
-	context.subscriptions.push(
-		vscode.commands.registerCommand("totallyhot.spark.setApikey", async () => {
-			const existing = await context.secrets.get("totallyhot.spark.apiKey");
-			const apiKey = await vscode.window.showInputBox({
-				title: "OAI Compatible Provider API Key",
-				prompt: existing ? "Update your OAI Compatible API key" : "Enter your OAI Compatible API key",
-				ignoreFocusOut: true,
-				password: true,
-				value: existing ?? "",
-			});
-			if (apiKey === undefined) {
-				return; // user canceled
-			}
-			if (!apiKey.trim()) {
-				await context.secrets.delete("totallyhot.spark.apiKey");
-				vscode.window.showInformationMessage("OAI Compatible API key cleared.");
-				return;
-			}
-			await context.secrets.store("totallyhot.spark.apiKey", apiKey.trim());
-			vscode.window.showInformationMessage("OAI Compatible API key saved.");
-		})
-	);
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand("totallyhot.spark.openConfig", async () => {
@@ -51,7 +27,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// Register the generateGitCommitMessage command handler
 	context.subscriptions.push(
 		vscode.commands.registerCommand("totallyhot.spark.generateGitCommitMessage", async (scm) => {
-			generateCommitMsg(context.secrets, scm);
+			generateCommitMsg(scm);
 		}),
 		vscode.commands.registerCommand("totallyhot.spark.abortGitCommitMessage", () => {
 			abortCommitGeneration();

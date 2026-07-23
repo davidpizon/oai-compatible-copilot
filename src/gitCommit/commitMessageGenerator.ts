@@ -20,7 +20,7 @@ const DEFAULT_PROMPT = {
 	user: "Notes from developer (ignore if not relevant): {{USER_CURRENT_INPUT}}",
 };
 
-export async function generateCommitMsg(secrets: vscode.SecretStorage, scm?: vscode.SourceControl) {
+export async function generateCommitMsg(scm?: vscode.SourceControl) {
 	try {
 		const gitExtension = vscode.extensions.getExtension("vscode.git")?.exports;
 		if (!gitExtension) {
@@ -40,18 +40,18 @@ export async function generateCommitMsg(secrets: vscode.SecretStorage, scm?: vsc
 				throw new Error("Repository not found for provided SCM");
 			}
 
-			await generateCommitMsgForRepository(secrets, repository);
+			await generateCommitMsgForRepository(repository);
 			return;
 		}
 
-		await orchestrateWorkspaceCommitMsgGeneration(secrets, git.repositories);
+		await orchestrateWorkspaceCommitMsgGeneration(git.repositories);
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		vscode.window.showErrorMessage(`[Commit Generation Failed] ${errorMessage}`);
 	}
 }
 
-async function orchestrateWorkspaceCommitMsgGeneration(secrets: vscode.SecretStorage, repos: any[]) {
+async function orchestrateWorkspaceCommitMsgGeneration(repos: any[]) {
 	const reposWithChanges = await filterForReposWithChanges(repos);
 
 	if (reposWithChanges.length === 0) {
@@ -62,7 +62,7 @@ async function orchestrateWorkspaceCommitMsgGeneration(secrets: vscode.SecretSto
 	if (reposWithChanges.length === 1) {
 		// Only one repo with changes, generate for it
 		const repo = reposWithChanges[0];
-		await generateCommitMsgForRepository(secrets, repo);
+		await generateCommitMsgForRepository(repo);
 		return;
 	}
 
@@ -77,14 +77,14 @@ async function orchestrateWorkspaceCommitMsgGeneration(secrets: vscode.SecretSto
 		// Generate for all repositories with changes
 		for (const repo of reposWithChanges) {
 			try {
-				await generateCommitMsgForRepository(secrets, repo);
+				await generateCommitMsgForRepository(repo);
 			} catch (error) {
 				console.error(`Failed to generate commit message for ${repo.rootUri.fsPath}:`, error);
 			}
 		}
 	} else {
 		// Generate for selected repository
-		await generateCommitMsgForRepository(secrets, selection.repo);
+		await generateCommitMsgForRepository(selection.repo);
 	}
 }
 
@@ -124,7 +124,7 @@ async function promptRepoSelection(repos: any[]) {
 	});
 }
 
-async function generateCommitMsgForRepository(secrets: vscode.SecretStorage, repository: any) {
+async function generateCommitMsgForRepository(repository: any) {
 	const inputBox = repository.inputBox;
 	const repoPath = repository.rootUri.fsPath;
 	const gitDiff = await getGitDiff(repoPath);
@@ -139,11 +139,11 @@ async function generateCommitMsgForRepository(secrets: vscode.SecretStorage, rep
 			title: `Generating commit message for ${repoPath.split(path.sep).pop() || "repository"}...`,
 			cancellable: true,
 		},
-		() => performCommitMsgGeneration(secrets, gitDiff, inputBox)
+		() => performCommitMsgGeneration(gitDiff, inputBox)
 	);
 }
 
-async function performCommitMsgGeneration(secrets: vscode.SecretStorage, gitDiff: string, inputBox: any) {
+async function performCommitMsgGeneration(gitDiff: string, inputBox: any) {
 	const startTime = Date.now();
 	let modelId: string | undefined;
 	try {
@@ -177,12 +177,6 @@ async function performCommitMsgGeneration(secrets: vscode.SecretStorage, gitDiff
 		modelId = selectedModel.id;
 		logger.info("commit.start", { modelId });
 
-		// Get the single API key for the configured endpoint.
-		const apiKey = await ensureApiKey(secrets);
-		if (!apiKey) {
-			throw new Error("OAI Compatible API key not found");
-		}
-
 		// Get base URL for the model
 		const baseUrl = selectedModel.baseUrl || config.get<string>("totallyhot.spark.baseUrl", "");
 		if (!baseUrl || !baseUrl.startsWith("http")) {
@@ -214,7 +208,7 @@ async function performCommitMsgGeneration(secrets: vscode.SecretStorage, gitDiff
 		}
 
 		commitGenerationAbortController = new AbortController();
-		const stream = apiInstance.createMessage(selectedModel, systemPrompt, messages, baseUrl, apiKey);
+		const stream = apiInstance.createMessage(selectedModel, systemPrompt, messages, baseUrl);
 
 		let response = "";
 		for await (const chunk of stream) {
@@ -262,12 +256,5 @@ function extractCommitMessage(str: string): string {
 function removeThinkTags(text: string): string {
 	const regex = /<think>.*?<\/think>/gs;
 	return text.replace(regex, "").trim();
-}
-
-/**
- * Ensure the single API key exists in SecretStorage.
- */
-async function ensureApiKey(secrets: vscode.SecretStorage): Promise<string | undefined> {
-	return secrets.get("totallyhot.spark.apiKey");
 }
 

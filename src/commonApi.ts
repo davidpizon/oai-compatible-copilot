@@ -102,15 +102,13 @@ export abstract class CommonApi<TMessage, TRequestBody> {
 	 * @param systemPrompt The system prompt to use.
 	 * @param messages The messages to send.
 	 * @param baseUrl The base URL for the API.
-	 * @param apiKey The API key to use.
 	 * @returns An async iterable of text chunks.
 	 */
 	abstract createMessage(
 		model: HFModelItem,
 		systemPrompt: string,
 		messages: { role: string; content: string }[],
-		baseUrl: string,
-		apiKey: string
+		baseUrl: string
 	): AsyncGenerator<{ type: "text"; text: string }>;
 
 	/**
@@ -278,32 +276,20 @@ export abstract class CommonApi<TMessage, TRequestBody> {
 
 	/**
 	 * Prepare headers for API request.
-	 * @param apiKey The API key to use.
 	 * @param apiMode The apiMode (affects header format).
 	 * @param customHeaders Optional custom headers from model config.
 	 * @returns Headers object.
 	 */
-	public static prepareHeaders(
-		apiKey: string,
-		apiMode: string,
-		customHeaders?: Record<string, string>
-	): Record<string, string> {
+	public static prepareHeaders(apiMode: string, customHeaders?: Record<string, string>): Record<string, string> {
 		const headers: Record<string, string> = {
 			"Content-Type": "application/json",
 			"User-Agent": VersionManager.getUserAgent(),
 		};
 
-		// Provider-specific header formats
 		if (apiMode === "anthropic") {
-			headers["x-api-key"] = apiKey;
 			headers["anthropic-version"] = "2023-06-01";
-		} else if (apiMode === "ollama" && apiKey !== "ollama") {
-			headers["Authorization"] = `Bearer ${apiKey}`;
 		} else if (apiMode === "gemini") {
-			headers["x-goog-api-key"] = apiKey;
 			headers["Accept"] = "text/event-stream";
-		} else {
-			headers["Authorization"] = `Bearer ${apiKey}`;
 		}
 
 		// Merge custom headers
