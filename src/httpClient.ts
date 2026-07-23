@@ -47,13 +47,13 @@ function getSetting<T>(key: string, defaultValue: T): T {
 }
 
 function notifyHttp1Fallback(hostname: string, protocol: string): void {
-	if (warnedHosts.has(hostname) || !getSetting("oaicopilot.warnOnHttp1", true)) {
+	if (warnedHosts.has(hostname) || !getSetting("totallyhot.spark.warnOnHttp1", true)) {
 		return;
 	}
 	warnedHosts.add(hostname);
 	logger.warn("http.protocol.fallback", { host: hostname, protocol });
 	vscode.window.showWarningMessage(
-		`OAICopilot: connected to "${hostname}" over ${protocol} — HTTP/2 was not negotiated. Requests still work, but consider enabling HTTP/2 on the endpoint for better multiplexing/performance.`
+		`TotallyHot Spark: connected to "${hostname}" over ${protocol} — HTTP/2 was not negotiated. Requests still work, but consider enabling HTTP/2 on the endpoint for better multiplexing/performance.`
 	);
 }
 
@@ -94,10 +94,10 @@ function buildDispatcher(allowInsecureTls: boolean): Agent {
 
 /**
  * Get the shared HTTP/2-capable dispatcher for all extension requests.
- * Rebuilds the underlying Agent when `oaicopilot.allowInsecureTls` changes.
+ * Rebuilds the underlying Agent when `totallyhot.spark.allowInsecureTls` changes.
  */
 export function getDispatcher(): Agent {
-	const allowInsecureTls = getSetting("oaicopilot.allowInsecureTls", false);
+	const allowInsecureTls = getSetting("totallyhot.spark.allowInsecureTls", false);
 	if (!cachedDispatcher || cachedAllowInsecureTls !== allowInsecureTls) {
 		cachedDispatcher?.close().catch(() => {
 			/* best-effort close of the previous dispatcher */
@@ -107,3 +107,4 @@ export function getDispatcher(): Agent {
 	}
 	return cachedDispatcher;
 }
+

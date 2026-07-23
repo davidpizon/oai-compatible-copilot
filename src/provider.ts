@@ -39,16 +39,9 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 	private readonly _geminiToolCallMetaByCallId = new Map<string, GeminiToolCallMeta>();
 	private readonly _openaiResponsesPreviousResponseIdUnsupportedBaseUrls = new Set<string>();
 
-	static readonly OPENAI_RESPONSES_STATEFUL_MARKER_MIME = "application/vnd.oaicopilot.stateful-marker";
+	static readonly OPENAI_RESPONSES_STATEFUL_MARKER_MIME = "application/vnd.totallyhot.spark.stateful-marker";
 
-	/**
-	 * Create a provider using the given secret storage for the API key.
-	 * @param secrets VS Code secret storage.
-	 */
-	constructor(
-		private readonly secrets: vscode.SecretStorage,
-		private readonly statusBarItem: vscode.StatusBarItem
-	) {}
+	constructor(private readonly statusBarItem: vscode.StatusBarItem) {}
 
 	/**
 	 * Get the list of available language models contributed by this provider
@@ -60,7 +53,7 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 		options: { silent: boolean },
 		_token: CancellationToken
 	): Promise<LanguageModelChatInformation[]> {
-		return prepareLanguageModelChatInformation({ silent: options.silent ?? false }, _token, this.secrets);
+		return prepareLanguageModelChatInformation({ silent: options.silent ?? false }, _token);
 	}
 
 	/**
@@ -115,13 +108,13 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 				id: model.id,
 				owned_by: "",
 				apiMode: "openai",
-				baseUrl: config.get<string>("oaicopilot.baseUrl", ""),
+				baseUrl: config.get<string>("totallyhot.spark.baseUrl", ""),
 			};
 			// The id the picker reports is the id we send upstream — no config-id suffixes.
 			const baseId = um.id;
 
 			const apiMode = um.apiMode ?? "openai";
-			const baseUrl = um.baseUrl || config.get<string>("oaicopilot.baseUrl", "");
+			const baseUrl = um.baseUrl || config.get<string>("totallyhot.spark.baseUrl", "");
 
 			logger.info("request.start", {
 				modelId: model.id,
@@ -140,7 +133,7 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 
 			// Apply delay between consecutive requests
 			const modelDelay = um?.delay;
-			const globalDelay = config.get<number>("oaicopilot.delay", 0);
+			const globalDelay = config.get<number>("totallyhot.spark.delay", 0);
 			const delayMs = modelDelay !== undefined ? modelDelay : globalDelay;
 
 			if (delayMs > 0 && this._lastRequestTime !== null) {
@@ -161,13 +154,6 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 				}
 			}
 
-			// Get the single API key for the configured endpoint.
-			const modelApiKey = await this.ensureApiKey();
-			if (!modelApiKey) {
-				logger.warn("apiKey.missing", {});
-				throw new Error("OAI Compatible API key not found");
-			}
-
 			// send chat request
 			const BASE_URL = baseUrl;
 			if (!BASE_URL || !BASE_URL.startsWith("http")) {
@@ -178,7 +164,7 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 			const retryConfig = createRetryConfig();
 
 			// prepare headers with custom headers if specified
-			const requestHeaders = CommonApi.prepareHeaders(modelApiKey, apiMode, um?.headers);
+			const requestHeaders = CommonApi.prepareHeaders(apiMode, um?.headers);
 			logger.debug("request.headers", {
 				headers: logger.sanitizeHeaders(requestHeaders as Record<string, string>),
 			});
@@ -309,7 +295,7 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 				// Add prompt_cache_key to enable OpenAI prompt caching.
 				// Without this parameter, cached_tokens is always 0 even with identical requests.
 				if (!requestBody.prompt_cache_key) {
-					requestBody.prompt_cache_key = `oaicopilot-${baseId}`;
+					requestBody.prompt_cache_key = `totallyhot.spark-${baseId}`;
 				}
 				// send Responses API request with retry
 				const url = `${normalizedBaseUrl}/responses`;
@@ -514,27 +500,6 @@ export class HuggingFaceChatModelProvider implements LanguageModelChatProvider {
 			this._lastRequestTime = Date.now();
 		}
 	}
-
-	/**
-	 * Ensure the single API key exists in SecretStorage, prompting the user when missing.
-	 */
-	private async ensureApiKey(): Promise<string | undefined> {
-		let apiKey = await this.secrets.get("oaicopilot.apiKey");
-
-		if (!apiKey) {
-			const entered = await vscode.window.showInputBox({
-				title: "OAI Compatible API Key",
-				prompt: "Enter your OAI Compatible API key",
-				ignoreFocusOut: true,
-				password: true,
-			});
-			if (entered && entered.trim()) {
-				apiKey = entered.trim();
-				await this.secrets.store("oaicopilot.apiKey", apiKey);
-			}
-		}
-		return apiKey;
-	}
 }
 
 type OpenAIResponsesStatefulMarkerLocation = { marker: string; index: number };
@@ -594,3 +559,4 @@ function findLastOpenAIResponsesStatefulMarker(
 	}
 	return null;
 }
+

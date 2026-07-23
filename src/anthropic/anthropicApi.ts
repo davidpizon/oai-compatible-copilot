@@ -591,8 +591,7 @@ export class AnthropicApi extends CommonApi<AnthropicMessage, AnthropicRequestBo
 		model: HFModelItem,
 		systemPrompt: string,
 		messages: { role: string; content: string }[],
-		baseUrl: string,
-		apiKey: string
+		baseUrl: string
 	): AsyncGenerator<{ type: "text"; text: string }> {
 		// For Anthropic, we need to separate system prompt from messages
 		const anthropicMessages: AnthropicMessage[] = messages.map((m) => ({
@@ -609,7 +608,7 @@ export class AnthropicApi extends CommonApi<AnthropicMessage, AnthropicRequestBo
 		};
 		requestBody = this.prepareRequestBody(requestBody, model, undefined);
 
-		const headers = CommonApi.prepareHeaders(apiKey, model.apiMode ?? "openai", model.headers);
+		const headers = CommonApi.prepareHeaders(model.apiMode ?? "openai", model.headers);
 
 		const normalizedBaseUrl = baseUrl.replace(/\/+$/, "");
 		// Some providers require configuring the baseUrl with a version suffix (e.g. .../v1).

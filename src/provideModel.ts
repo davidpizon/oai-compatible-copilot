@@ -6,7 +6,7 @@ import { logger } from "./logger";
 
 const DEFAULT_CONTEXT_LENGTH = 128000;
 const DEFAULT_MAX_TOKENS = 4096;
-const EXTENSION_LABEL = "OAICopilot";
+const EXTENSION_LABEL = "TotallyHot Spark";
 const DEFAULT_API_MODE: HFApiMode = "openai";
 const API_MODES: readonly HFApiMode[] = ["openai", "openai-responses", "ollama", "anthropic", "gemini"];
 
@@ -21,15 +21,15 @@ export function normalizeApiMode(value: unknown): HFApiMode {
 /**
  * Resolve the single model this extension exposes to Copilot Chat.
  *
- * The model is defined entirely by the flat `oaicopilot.baseUrl`,
- * `oaicopilot.modelId`, and `oaicopilot.apiMode` settings — the extension is a
+ * The model is defined entirely by the flat `totallyhot.spark.baseUrl`,
+ * `totallyhot.spark.modelId`, and `totallyhot.spark.apiMode` settings — the extension is a
  * bridge to one Agentic Router (OpenAI-compatible) endpoint, so there is never
  * more than one model. Returns `undefined` when no model id is configured.
  */
 export function resolveSingleModel(
 	config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration()
 ): HFModelItem | undefined {
-	const modelId = config.get<string>("oaicopilot.modelId", "").trim();
+	const modelId = config.get<string>("totallyhot.spark.modelId", "").trim();
 	if (!modelId) {
 		return undefined;
 	}
@@ -37,8 +37,8 @@ export function resolveSingleModel(
 	return {
 		id: modelId,
 		owned_by: "",
-		apiMode: normalizeApiMode(config.get<string>("oaicopilot.apiMode", DEFAULT_API_MODE)),
-		baseUrl: config.get<string>("oaicopilot.baseUrl", ""),
+		apiMode: normalizeApiMode(config.get<string>("totallyhot.spark.apiMode", DEFAULT_API_MODE)),
+		baseUrl: config.get<string>("totallyhot.spark.baseUrl", ""),
 	};
 }
 
@@ -51,8 +51,7 @@ export function resolveSingleModel(
  */
 export async function prepareLanguageModelChatInformation(
 	_options: { silent: boolean },
-	_token: CancellationToken,
-	_secrets: vscode.SecretStorage
+	_token: CancellationToken
 ): Promise<LanguageModelChatInformation[]> {
 	const config = vscode.workspace.getConfiguration();
 	const model = resolveSingleModel(config);
@@ -61,7 +60,7 @@ export async function prepareLanguageModelChatInformation(
 		return [];
 	}
 
-	const modelName = config.get<string>("oaicopilot.modelName", "").trim() || model.id;
+	const modelName = config.get<string>("totallyhot.spark.modelName", "").trim() || model.id;
 	const maxOutput = DEFAULT_MAX_TOKENS;
 	const maxInput = Math.max(1, DEFAULT_CONTEXT_LENGTH - maxOutput);
 
@@ -87,3 +86,4 @@ export async function prepareLanguageModelChatInformation(
 	logger.info("models.loaded", { count: 1, source: "config" });
 	return [info];
 }
+

@@ -20,7 +20,7 @@ const DEFAULT_PROMPT = {
 	user: "Notes from developer (ignore if not relevant): {{USER_CURRENT_INPUT}}",
 };
 
-export async function generateCommitMsg(secrets: vscode.SecretStorage, scm?: vscode.SourceControl) {
+export async function generateCommitMsg(scm?: vscode.SourceControl) {
 	try {
 		const gitExtension = vscode.extensions.getExtension("vscode.git")?.exports;
 		if (!gitExtension) {
@@ -40,18 +40,18 @@ export async function generateCommitMsg(secrets: vscode.SecretStorage, scm?: vsc
 				throw new Error("Repository not found for provided SCM");
 			}
 
-			await generateCommitMsgForRepository(secrets, repository);
+			await generateCommitMsgForRepository(repository);
 			return;
 		}
 
-		await orchestrateWorkspaceCommitMsgGeneration(secrets, git.repositories);
+		await orchestrateWorkspaceCommitMsgGeneration(git.repositories);
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		vscode.window.showErrorMessage(`[Commit Generation Failed] ${errorMessage}`);
 	}
 }
 
-async function orchestrateWorkspaceCommitMsgGeneration(secrets: vscode.SecretStorage, repos: any[]) {
+async function orchestrateWorkspaceCommitMsgGeneration(repos: any[]) {
 	const reposWithChanges = await filterForReposWithChanges(repos);
 
 	if (reposWithChanges.length === 0) {
@@ -62,7 +62,7 @@ async function orchestrateWorkspaceCommitMsgGeneration(secrets: vscode.SecretSto
 	if (reposWithChanges.length === 1) {
 		// Only one repo with changes, generate for it
 		const repo = reposWithChanges[0];
-		await generateCommitMsgForRepository(secrets, repo);
+		await generateCommitMsgForRepository(repo);
 		return;
 	}
 
@@ -77,14 +77,14 @@ async function orchestrateWorkspaceCommitMsgGeneration(secrets: vscode.SecretSto
 		// Generate for all repositories with changes
 		for (const repo of reposWithChanges) {
 			try {
-				await generateCommitMsgForRepository(secrets, repo);
+				await generateCommitMsgForRepository(repo);
 			} catch (error) {
 				console.error(`Failed to generate commit message for ${repo.rootUri.fsPath}:`, error);
 			}
 		}
 	} else {
 		// Generate for selected repository
-		await generateCommitMsgForRepository(secrets, selection.repo);
+		await generateCommitMsgForRepository(selection.repo);
 	}
 }
 
@@ -124,7 +124,7 @@ async function promptRepoSelection(repos: any[]) {
 	});
 }
 
-async function generateCommitMsgForRepository(secrets: vscode.SecretStorage, repository: any) {
+async function generateCommitMsgForRepository(repository: any) {
 	const inputBox = repository.inputBox;
 	const repoPath = repository.rootUri.fsPath;
 	const gitDiff = await getGitDiff(repoPath);
@@ -139,19 +139,19 @@ async function generateCommitMsgForRepository(secrets: vscode.SecretStorage, rep
 			title: `Generating commit message for ${repoPath.split(path.sep).pop() || "repository"}...`,
 			cancellable: true,
 		},
-		() => performCommitMsgGeneration(secrets, gitDiff, inputBox)
+		() => performCommitMsgGeneration(gitDiff, inputBox)
 	);
 }
 
-async function performCommitMsgGeneration(secrets: vscode.SecretStorage, gitDiff: string, inputBox: any) {
+async function performCommitMsgGeneration(gitDiff: string, inputBox: any) {
 	const startTime = Date.now();
 	let modelId: string | undefined;
 	try {
-		vscode.commands.executeCommand("setContext", "oaicopilot.isGeneratingCommit", true);
+		vscode.commands.executeCommand("setContext", "totallyhot.spark.isGeneratingCommit", true);
 		const config = vscode.workspace.getConfiguration();
 
 		// Get custom prompts or use defaults
-		const customSystemPrompt = config.get<string>("oaicopilot.commitMessagePrompt", "");
+		const customSystemPrompt = config.get<string>("totallyhot.spark.commitMessagePrompt", "");
 		const PROMPT = {
 			system: customSystemPrompt || DEFAULT_PROMPT.system,
 			user: DEFAULT_PROMPT.user,
@@ -172,25 +172,19 @@ async function performCommitMsgGeneration(secrets: vscode.SecretStorage, gitDiff
 		// Use the single configured model (baseUrl + modelId + apiMode).
 		const selectedModel = resolveSingleModel(config);
 		if (!selectedModel) {
-			throw new Error("No model configured. Please set 'oaicopilot.modelId' in your settings.");
+			throw new Error("No model configured. Please set 'totallyhot.spark.modelId' in your settings.");
 		}
 		modelId = selectedModel.id;
 		logger.info("commit.start", { modelId });
 
-		// Get the single API key for the configured endpoint.
-		const apiKey = await ensureApiKey(secrets);
-		if (!apiKey) {
-			throw new Error("OAI Compatible API key not found");
-		}
-
 		// Get base URL for the model
-		const baseUrl = selectedModel.baseUrl || config.get<string>("oaicopilot.baseUrl", "");
+		const baseUrl = selectedModel.baseUrl || config.get<string>("totallyhot.spark.baseUrl", "");
 		if (!baseUrl || !baseUrl.startsWith("http")) {
 			throw new Error(`Invalid base URL configuration.`);
 		}
 
 		// Get commit language configuration
-		const commitLanguage = config.get<string>("oaicopilot.commitLanguage", "English");
+		const commitLanguage = config.get<string>("totallyhot.spark.commitLanguage", "English");
 
 		// Create a system prompt with language instruction
 		const systemPrompt = PROMPT.system + ` Generate commit message in ${commitLanguage}.`;
@@ -214,7 +208,7 @@ async function performCommitMsgGeneration(secrets: vscode.SecretStorage, gitDiff
 		}
 
 		commitGenerationAbortController = new AbortController();
-		const stream = apiInstance.createMessage(selectedModel, systemPrompt, messages, baseUrl, apiKey);
+		const stream = apiInstance.createMessage(selectedModel, systemPrompt, messages, baseUrl);
 
 		let response = "";
 		for await (const chunk of stream) {
@@ -237,13 +231,13 @@ async function performCommitMsgGeneration(secrets: vscode.SecretStorage, gitDiff
 		logger.error("commit.error", { modelId: modelId ?? "unknown", error: errorMessage });
 		vscode.window.showErrorMessage(`Failed to generate commit message: ${errorMessage}`);
 	} finally {
-		vscode.commands.executeCommand("setContext", "oaicopilot.isGeneratingCommit", false);
+		vscode.commands.executeCommand("setContext", "totallyhot.spark.isGeneratingCommit", false);
 	}
 }
 
 export function abortCommitGeneration() {
 	commitGenerationAbortController?.abort();
-	vscode.commands.executeCommand("setContext", "oaicopilot.isGeneratingCommit", false);
+	vscode.commands.executeCommand("setContext", "totallyhot.spark.isGeneratingCommit", false);
 }
 
 /**
@@ -264,9 +258,3 @@ function removeThinkTags(text: string): string {
 	return text.replace(regex, "").trim();
 }
 
-/**
- * Ensure the single API key exists in SecretStorage.
- */
-async function ensureApiKey(secrets: vscode.SecretStorage): Promise<string | undefined> {
-	return secrets.get("oaicopilot.apiKey");
-}

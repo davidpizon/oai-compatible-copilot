@@ -1,7 +1,7 @@
 {
-	"name": "oai-compatible-copilot",
+	"name": "totallyhot-spark",
 	"publisher": "davidpizon",
-	"displayName": "Agentic Router Provider for Copilot",
+	"displayName": "TotallyHot Spark",
 	"description": "The connective adapter that bridges GitHub Copilot Chat with an Agentic Router.",
 	"icon": "assets/logo.png",
 	"keywords": [
@@ -50,63 +50,57 @@
 	"contributes": {
 		"languageModelChatProviders": [
 			{
-				"vendor": "oaicopilot",
-				"displayName": "OAI Compatible",
-				"managementCommand": "oaicopilot.setApikey"
+				"vendor": "totallyhot.spark",
+				"displayName": "TotallyHot Spark"
 			}
 		],
 		"commands": [
 			{
-				"command": "oaicopilot.setApikey",
-				"category": "OAICopilot",
-				"title": "Set OAI Compatible Apikey"
-			},
-			{
-				"command": "oaicopilot.openConfig",
-				"category": "OAICopilot",
+				"command": "totallyhot.spark.openConfig",
+				"category": "TotallyHot Spark",
 				"title": "Open Configuration UI"
 			},
 			{
-				"command": "oaicopilot.generateGitCommitMessage",
-				"title": "Generate Commit Message with OAICopilot",
-				"category": "OAICopilot",
+				"command": "totallyhot.spark.generateGitCommitMessage",
+				"title": "Generate Commit Message with TotallyHot Spark",
+				"category": "TotallyHot Spark",
 				"icon": "$(wand)"
 			},
 			{
-				"command": "oaicopilot.abortGitCommitMessage",
-				"title": "Generate Commit Message with OAICopilot - Stop",
-				"category": "OAICopilot",
+				"command": "totallyhot.spark.abortGitCommitMessage",
+				"title": "Generate Commit Message with TotallyHot Spark - Stop",
+				"category": "TotallyHot Spark",
 				"icon": "$(debug-stop)"
 			}
 		],
 		"menus": {
 			"scm/title": [
 				{
-					"command": "oaicopilot.generateGitCommitMessage",
+					"command": "totallyhot.spark.generateGitCommitMessage",
 					"group": "navigation",
-					"when": "config.git.enabled && scmProvider == git && !oaicopilot.isGeneratingCommit"
+					"when": "config.git.enabled && scmProvider == git && !totallyhot.spark.isGeneratingCommit"
 				},
 				{
-					"command": "oaicopilot.abortGitCommitMessage",
+					"command": "totallyhot.spark.abortGitCommitMessage",
 					"group": "navigation",
-					"when": "config.git.enabled && scmProvider == git && oaicopilot.isGeneratingCommit"
+					"when": "config.git.enabled && scmProvider == git && totallyhot.spark.isGeneratingCommit"
 				}
 			],
 			"commandPalette": [
 				{
-					"command": "oaicopilot.generateGitCommitMessage",
-					"when": "config.git.enabled && !oaicopilot.isGeneratingCommit"
+					"command": "totallyhot.spark.generateGitCommitMessage",
+					"when": "config.git.enabled && !totallyhot.spark.isGeneratingCommit"
 				},
 				{
-					"command": "oaicopilot.abortGitCommitMessage",
-					"when": "config.git.enabled && oaicopilot.isGeneratingCommit"
+					"command": "totallyhot.spark.abortGitCommitMessage",
+					"when": "config.git.enabled && totallyhot.spark.isGeneratingCommit"
 				}
 			]
 		},
 		"configuration": {
-			"title": "OAI Compatible Copilot",
+			"title": "TotallyHot Spark",
 			"properties": {
-				"oaicopilot.logLevel": {
+				"totallyhot.spark.logLevel": {
 					"type": "string",
 					"default": "off",
 					"enum": [
@@ -116,24 +110,24 @@
 						"warn",
 						"error"
 					],
-					"description": "Debug log level. Logs are written to ~/.copilot/oaicopilot/logs/ as JSON lines. Default is 'off' (no logging)."
+					"description": "Debug log level. Logs are written to ~/.copilot/totallyhot.spark/logs/ as JSON lines. Default is 'off' (no logging)."
 				},
-				"oaicopilot.baseUrl": {
+				"totallyhot.spark.baseUrl": {
 					"type": "string",
 					"default": "http://127.0.0.1:5001/v1",
 					"description": "Base URL of the Agentic Router (or any OpenAI-compatible endpoint) this extension talks to. All chat requests for the single exposed model are sent here."
 				},
-				"oaicopilot.modelId": {
+				"totallyhot.spark.modelId": {
 					"type": "string",
 					"default": "agentic-router",
 					"description": "The single model id sent (as the 'model' field) to the endpoint and shown in the Copilot model picker. Defaults to 'agentic-router' for single-model Agentic Router setups; set it to a configured route name (e.g. 'gpt-5.4') when the router does normal multi-model routing. Leave empty to expose no model. Not editable from the configuration UI."
 				},
-				"oaicopilot.modelName": {
+				"totallyhot.spark.modelName": {
 					"type": "string",
 					"default": "",
 					"description": "(Optional) Display name for the model in the Copilot model picker. Defaults to the model id when empty."
 				},
-				"oaicopilot.apiMode": {
+				"totallyhot.spark.apiMode": {
 					"type": "string",
 					"enum": [
 						"openai",
@@ -145,17 +139,17 @@
 					"default": "openai",
 					"description": "Protocol used to talk to the endpoint: 'openai' (Default) for OpenAI Chat Completions (/chat/completions), 'openai-responses' for OpenAI Responses (/responses), 'ollama' for Ollama (/api/chat), 'anthropic' for Anthropic (/v1/messages), 'gemini' for Gemini (*/v1beta/models/{model}:streamGenerateContent?alt=sse)."
 				},
-				"oaicopilot.allowInsecureTls": {
+				"totallyhot.spark.allowInsecureTls": {
 					"type": "boolean",
 					"default": false,
 					"description": "Skip TLS certificate verification — only for localhost/127.0.0.1/::1 endpoints (e.g. a local dev proxy with a self-signed certificate). Never applied to remote hosts even when enabled. Leave disabled unless you understand the risk."
 				},
-				"oaicopilot.warnOnHttp1": {
+				"totallyhot.spark.warnOnHttp1": {
 					"type": "boolean",
 					"default": true,
 					"description": "Show a warning (and log it) the first time a request connects over HTTP/1.1 instead of negotiating HTTP/2 with the configured endpoint. Requests still work either way — HTTP/2 is opportunistic, not required."
 				},
-				"oaicopilot.retry": {
+				"totallyhot.spark.retry": {
 					"type": "object",
 					"default": {
 						"enabled": true,
@@ -191,13 +185,13 @@
 					},
 					"description": "Retry configuration for handling api errors like [429, 500, 502, 503, 504]."
 				},
-				"oaicopilot.delay": {
+				"totallyhot.spark.delay": {
 					"type": "number",
 					"default": 0,
 					"minimum": 0,
 					"description": "Fixed delay in milliseconds between consecutive requests. Default is 0 (no delay)."
 				},
-				"oaicopilot.commitLanguage": {
+				"totallyhot.spark.commitLanguage": {
 					"type": "string",
 					"default": "English",
 					"enum": [
@@ -218,12 +212,12 @@
 					],
 					"description": "Language for generated Git commit messages. Default is English."
 				},
-				"oaicopilot.commitMessagePrompt": {
+				"totallyhot.spark.commitMessagePrompt": {
 					"type": "string",
 					"default": "",
 					"description": "Custom system prompt for commit message generation. If not provided, uses the default prompt."
 				},
-				"oaicopilot.readFileLines": {
+				"totallyhot.spark.readFileLines": {
 					"type": "number",
 					"default": 0,
 					"minimum": 0,
@@ -261,5 +255,9 @@
 		"prettier": "^3.9.5",
 		"typescript": "^7.0.2",
 		"typescript-eslint": "^8.64.0"
+	},
+	"overrides": {
+		"serialize-javascript": "^7.0.5"
 	}
 }
+

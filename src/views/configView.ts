@@ -36,9 +36,9 @@ type OutgoingMessage = { type: "init"; payload: InitPayload };
 
 /**
  * A minimal configuration webview for the single Agentic Router model this
- * extension exposes. It edits the flat `oaicopilot.*` settings — there is no
- * provider or multi-model management. The `oaicopilot.apiKey` secret is managed
- * separately via the "Set OAI Compatible Apikey" command.
+ * extension exposes. It edits the flat `totallyhot.spark.*` settings — there is no
+ * provider or multi-model management, and no API key to configure (requests are
+ * sent without an auth header).
  */
 export class ConfigViewPanel {
 	public static currentPanel: ConfigViewPanel | undefined;
@@ -55,8 +55,8 @@ export class ConfigViewPanel {
 		}
 
 		const panel = vscode.window.createWebviewPanel(
-			"oaicopilot.config",
-			"OAICopilot Configuration",
+			"totallyhot.spark.config",
+			"TotallyHot Spark Configuration",
 			column || vscode.ViewColumn.One,
 			{
 				enableScripts: true,
@@ -79,7 +79,7 @@ export class ConfigViewPanel {
 		this.panel.webview.onDidReceiveMessage(
 			async (message) => {
 				this.handleMessage(message).catch((err) => {
-					console.error("[oaicopilot] handleMessage failed", err);
+					console.error("[totallyhot.spark] handleMessage failed", err);
 					vscode.window.showErrorMessage(
 						err instanceof Error
 							? err.message
@@ -128,17 +128,17 @@ export class ConfigViewPanel {
 
 	private async sendInit() {
 		const config = vscode.workspace.getConfiguration();
-		const baseUrl = config.get<string>("oaicopilot.baseUrl", "");
-		const modelName = config.get<string>("oaicopilot.modelName", "");
-		const apiMode = normalizeApiMode(config.get<string>("oaicopilot.apiMode", "openai"));
-		const delay = config.get<number>("oaicopilot.delay", 0);
-		const readFileLines = config.get<number>("oaicopilot.readFileLines", 0);
-		const retry = config.get<RetryPayload>("oaicopilot.retry", {
+		const baseUrl = config.get<string>("totallyhot.spark.baseUrl", "");
+		const modelName = config.get<string>("totallyhot.spark.modelName", "");
+		const apiMode = normalizeApiMode(config.get<string>("totallyhot.spark.apiMode", "openai"));
+		const delay = config.get<number>("totallyhot.spark.delay", 0);
+		const readFileLines = config.get<number>("totallyhot.spark.readFileLines", 0);
+		const retry = config.get<RetryPayload>("totallyhot.spark.retry", {
 			enabled: true,
 			max_attempts: 3,
 			interval_ms: 1000,
 		});
-		const commitLanguage = config.get<string>("oaicopilot.commitLanguage", "English");
+		const commitLanguage = config.get<string>("totallyhot.spark.commitLanguage", "English");
 
 		const payload: InitPayload = {
 			baseUrl,
@@ -154,15 +154,15 @@ export class ConfigViewPanel {
 
 	private async saveConfig(message: Extract<IncomingMessage, { type: "saveConfig" }>) {
 		const config = vscode.workspace.getConfiguration();
-		await config.update("oaicopilot.baseUrl", message.baseUrl.trim(), vscode.ConfigurationTarget.Global);
-		await config.update("oaicopilot.modelName", message.modelName.trim(), vscode.ConfigurationTarget.Global);
-		await config.update("oaicopilot.apiMode", normalizeApiMode(message.apiMode), vscode.ConfigurationTarget.Global);
-		await config.update("oaicopilot.delay", message.delay, vscode.ConfigurationTarget.Global);
-		await config.update("oaicopilot.readFileLines", message.readFileLines, vscode.ConfigurationTarget.Global);
-		await config.update("oaicopilot.retry", message.retry, vscode.ConfigurationTarget.Global);
-		await config.update("oaicopilot.commitLanguage", message.commitLanguage, vscode.ConfigurationTarget.Global);
+		await config.update("totallyhot.spark.baseUrl", message.baseUrl.trim(), vscode.ConfigurationTarget.Global);
+		await config.update("totallyhot.spark.modelName", message.modelName.trim(), vscode.ConfigurationTarget.Global);
+		await config.update("totallyhot.spark.apiMode", normalizeApiMode(message.apiMode), vscode.ConfigurationTarget.Global);
+		await config.update("totallyhot.spark.delay", message.delay, vscode.ConfigurationTarget.Global);
+		await config.update("totallyhot.spark.readFileLines", message.readFileLines, vscode.ConfigurationTarget.Global);
+		await config.update("totallyhot.spark.retry", message.retry, vscode.ConfigurationTarget.Global);
+		await config.update("totallyhot.spark.commitLanguage", message.commitLanguage, vscode.ConfigurationTarget.Global);
 
-		vscode.window.showInformationMessage("OAICopilot configuration saved.");
+		vscode.window.showInformationMessage("TotallyHot Spark configuration saved.");
 		await this.sendInit();
 	}
 
@@ -193,3 +193,4 @@ export class ConfigViewPanel {
 		return Array.from({ length: 16 }, () => Math.floor(Math.random() * 36).toString(36)).join("");
 	}
 }
+

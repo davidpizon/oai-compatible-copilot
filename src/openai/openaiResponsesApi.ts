@@ -674,8 +674,7 @@ export class OpenaiResponsesApi extends CommonApi<ResponsesInputItem, Record<str
 		model: HFModelItem,
 		systemPrompt: string,
 		messages: { role: string; content: string }[],
-		baseUrl: string,
-		apiKey: string
+		baseUrl: string
 	): AsyncGenerator<{ type: "text"; text: string }> {
 		// Convert to Responses API format
 		const input: ResponsesInputItem[] = [];
@@ -713,7 +712,7 @@ export class OpenaiResponsesApi extends CommonApi<ResponsesInputItem, Record<str
 
 		requestBody = this.prepareRequestBody(requestBody, model, undefined);
 
-		const headers = CommonApi.prepareHeaders(apiKey, model.apiMode ?? "openai-responses", model.headers);
+		const headers = CommonApi.prepareHeaders(model.apiMode ?? "openai-responses", model.headers);
 
 		const url = `${baseUrl.replace(/\/+$/, "")}/responses`;
 

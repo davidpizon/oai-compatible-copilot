@@ -998,8 +998,7 @@ export class GeminiApi extends CommonApi<GeminiChatMessage, GeminiGenerateConten
 		model: HFModelItem,
 		systemPrompt: string,
 		messages: { role: string; content: string }[],
-		baseUrl: string,
-		apiKey: string
+		baseUrl: string
 	): AsyncGenerator<{ type: "text"; text: string }> {
 		throw new Error("Method not implemented.");
 	}
